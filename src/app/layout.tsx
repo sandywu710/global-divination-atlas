@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Noto_Sans_TC } from "next/font/google";
 import Link from "next/link";
 import ClearDataButton from "@/components/ClearDataButton";
+import SiteLogo from "@/components/SiteLogo";
 import "./globals.css";
 
 // 標題用的襯線字體（編輯誌／博物館質感）
@@ -42,9 +43,7 @@ function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b hairline bg-ivory/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-        <Link href="/" className="font-serif text-base tracking-wide text-charcoal sm:text-lg">
-          Global Divination Atlas
-        </Link>
+        <SiteLogo />
         <nav className="flex items-center gap-4 text-sm text-charcoal-soft sm:gap-7 sm:text-[15px]">
           <Link href="/analyzer" className="tap-target flex items-center hover:text-charcoal">
             問問題
@@ -79,6 +78,15 @@ function SiteFooter() {
   );
 }
 
+// 全站共用的浮水印，低調置中，不搶版面
+function SiteWatermark() {
+  return (
+    <div className="border-t hairline px-5 py-5 sm:px-8">
+      <p className="text-center text-xs tracking-wide text-charcoal-soft/60">Made by Sandy</p>
+    </div>
+  );
+}
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="zh-Hant" className={`${fraunces.variable} ${notoSansTC.variable} h-full`}>
@@ -86,6 +94,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        <SiteWatermark />
       </body>
     </html>
   );
