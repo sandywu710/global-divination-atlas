@@ -15,7 +15,7 @@ export const motionConfig = {
     totalDurationMs: 1400,
     /** 單一元素本身淡入的時間，單位 ms */
     itemDurationMs: 700,
-    /** 每個元素之間依序出現的間隔，單位 ms（背景 → 標籤 → 標題 → 副標 → CTA） */
+    /** 每個元素之間依序出現的間隔，單位 ms（背景 → 卡牌 → 標籤 → 標題 → 副標 → CTA） */
     staggerMs: 130,
     /** 進場時往上浮現的位移距離，單位 px（很小，是「浮現」不是「飛入」） */
     riseDistancePx: 14,
@@ -23,22 +23,34 @@ export const motionConfig = {
     easing: "cubic-bezier(0.16, 1, 0.3, 1)",
   },
 
-  /** Hero 背景的星點／經緯線紋理層（呼應網站自己 favicon 的「星圖」品牌意象） */
+  /** Hero 背景的星盤圖與金色星塵層（astro-wheel.webp／gold-dust.webp，呼應網站自己
+   *  favicon 的「星圖」品牌意象；原本是 CSS 畫的圓圈／經緯線／點狀紋理，現在換成插畫素材，
+   *  動畫機制不變） */
   backdrop: {
-    /** 整層背景紋理轉一圈需要的時間，單位 sec——刻意設在分鐘等級，幾乎察覺不到在動 */
+    /** 整張星盤轉一圈需要的時間，單位 sec——刻意設在分鐘等級，幾乎察覺不到在動 */
     rotationDurationSec: 240,
-    /** 星點呼吸閃爍一次完整週期的時間，單位 sec */
+    /** 星塵呼吸閃爍一次完整週期的時間，單位 sec */
     twinkleDurationSec: 7,
-    /** 星點閃爍時的透明度範圍 */
+    /** 星塵閃爍時的透明度範圍 */
     twinkleMinOpacity: 0.35,
     twinkleMaxOpacity: 0.7,
-    /** 使用者開啟「減少動態效果」時，星點紋理固定使用這個透明度（不閃爍、不旋轉） */
+    /** 使用者開啟「減少動態效果」時，星塵固定使用這個透明度（不閃爍、不旋轉） */
     baseOpacity: 0.5,
+  },
+
+  /** 3 張塔羅卡牌的漂浮動態。每張卡片各自的幅度／週期／delay 都刻意錯開，
+   *  避免 3 張卡片同步上下移動顯得呆板。陣列順序對應 tarot-card-a/b/c。 */
+  cards: {
+    items: [
+      { amplitudePx: 6, durationSec: 9, delayMs: 0 },
+      { amplitudePx: 5, durationSec: 11, delayMs: 600 },
+      { amplitudePx: 7, durationSec: 13, delayMs: 1200 },
+    ],
   },
 
   /** 滑鼠視差（Phase 3 才會實際接上），先把數值定義好 */
   parallax: {
-    /** 背景紋理層可以位移的最大距離，單位 px */
+    /** 背景紋理層可以位移的最大距離，單位 px（星盤、星塵、卡牌都在這層裡，一起位移） */
     backdropMaxOffsetPx: 10,
     /** 文字內容層可以位移的最大距離，單位 px（比背景小，營造景深） */
     contentMaxOffsetPx: 4,

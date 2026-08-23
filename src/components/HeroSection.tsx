@@ -3,6 +3,7 @@
 import { useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import HeroBackdrop from "./HeroBackdrop";
+import HeroTarotCards from "./HeroTarotCards";
 import { motionConfig } from "@/lib/motionConfig";
 import { useHeroParallax } from "@/lib/useHeroParallax";
 import { usePrefersReducedMotion } from "@/lib/useReducedMotion";
@@ -48,18 +49,23 @@ export default function HeroSection({ systemsCount, regionCount }: HeroSectionPr
         <div className="hero-fade-item absolute inset-0" style={fadeStyle(0)}>
           <HeroBackdrop />
         </div>
+        {/* 卡牌放在跟星盤同一個視差 wrapper 裡：不用另外寫一套獨立深度的視差邏輯，
+            卡牌就會自動跟著背景一起有位移感，維持程式碼簡單。 */}
+        <div className="hero-fade-item absolute inset-0" style={fadeStyle(1)}>
+          <HeroTarotCards />
+        </div>
       </div>
 
       <div
         ref={contentParallaxRef}
         className="relative mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-24"
       >
-        <p className="hero-fade-item text-sm tracking-widest text-mist-gold" style={fadeStyle(1)}>
+        <p className="hero-fade-item text-sm tracking-widest text-mist-gold" style={fadeStyle(2)}>
           GLOBAL DIVINATION ATLAS
         </p>
         <h1
           className="hero-fade-item mt-4 font-serif text-[13vw] leading-[0.95] text-charcoal sm:text-6xl md:text-7xl"
-          style={fadeStyle(2)}
+          style={fadeStyle(3)}
         >
           GLOBAL
           <br />
@@ -67,7 +73,7 @@ export default function HeroSection({ systemsCount, regionCount }: HeroSectionPr
           <br />
           ATLAS
         </h1>
-        <div className="hero-fade-item" style={fadeStyle(3)}>
+        <div className="hero-fade-item" style={fadeStyle(4)}>
           <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-charcoal-soft sm:text-base">
             {systemsCount}+ traditions · {regionCount}+ regions · One question.
           </p>
@@ -78,7 +84,7 @@ export default function HeroSection({ systemsCount, regionCount }: HeroSectionPr
           </p>
         </div>
 
-        <div className="hero-fade-item mt-8 flex flex-col gap-3 sm:flex-row" style={fadeStyle(4)}>
+        <div className="hero-fade-item mt-8 flex flex-col gap-3 sm:flex-row" style={fadeStyle(5)}>
           <Link
             href="/analyzer"
             className="tap-target flex items-center justify-center rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-ivory transition-opacity hover:opacity-90"

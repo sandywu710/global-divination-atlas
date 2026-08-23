@@ -92,14 +92,13 @@ select {
   animation-delay: var(--hero-delay, 0ms);
 }
 
-/* Hero 背景氛圍層：星點紋理（純 CSS radial-gradient 重複產生，不是圖片） */
+/* Hero 背景氛圍層：金色星塵插畫（gold-dust.webp），鋪滿整個 Hero 背景。
+   這個 class 只負責「預設透明度」，實際的插畫內容是 Image 元件本身。 */
 .hero-backdrop__dots {
-  background-image: radial-gradient(circle, var(--color-mist-gold) 1px, transparent 1.6px);
-  background-size: 42px 42px;
   opacity: var(--hero-twinkle-min, 0.35);
 }
 
-/* 星點呼吸閃爍：在 min／max 透明度之間緩慢來回，模擬星塵微微閃爍的感覺。
+/* 星塵呼吸閃爍：在 min／max 透明度之間緩慢來回，模擬星塵微微閃爍的感覺。
    只用 opacity（GPU 合成），不會觸發 layout／repaint。 */
 @keyframes hero-twinkle {
   0%,
@@ -115,8 +114,8 @@ select {
   animation: hero-twinkle var(--hero-twinkle-duration, 7s) ease-in-out infinite;
 }
 
-/* 星圖圖案的極緩慢整體旋轉：一圈是分鐘等級，只用 transform（GPU 合成）。
-   transform-origin 用預設的 50% 50%，剛好對齊 SVG 裡圓心（viewBox 200,200）。 */
+/* 星盤插畫的極緩慢整體旋轉：一圈是分鐘等級，只用 transform（GPU 合成）。
+   transform-origin 用預設的 50% 50%，對齊圖片正中央（跟原本 SVG 圓心的位置一致）。 */
 @keyframes hero-rotate-slow {
   from {
     transform: rotate(0deg);
@@ -131,10 +130,34 @@ select {
   will-change: transform;
 }
 
+/* 塔羅卡牌的輕微上下漂浮：跟旋轉、閃爍一樣安靜、緩慢，只用 transform（GPU 合成）。
+   --hero-card-amplitude／duration／delay 由 HeroTarotCards.tsx 依每張卡片的
+   motionConfig.cards 參數各自賦值，讓 3 張卡片的漂浮節奏彼此錯開。
+   這個 class 套用在「漂浮專用」的內層 wrapper，跟外層負責固定位置／傾斜角度的
+   wrapper 分開，兩者才不會互搶 transform 屬性。 */
+@keyframes hero-card-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--hero-card-amplitude, 6px));
+  }
+}
+
+.hero-card-float {
+  animation: hero-card-float var(--hero-card-duration, 10s) ease-in-out infinite;
+  animation-delay: var(--hero-card-delay, 0ms);
+  will-change: transform;
+}
+
 /* 手機（< 640px，跟專案裡的 Tailwind sm 斷點對齊）再簡化一層：
-   同時跑「星圖旋轉」＋「星點閃爍」兩個迴圈動畫，在小螢幕上顯得比較擁擠、
-   也不必要地多耗一點效能，所以手機只保留星點閃爍，星圖圖案改成靜止不轉
-   （還是看得到，只是不再自己轉動）。平板以上維持完整效果。 */
+   同時跑「星盤旋轉」＋「星塵閃爍」兩個迴圈動畫，在小螢幕上顯得比較擁擠、
+   也不必要地多耗一點效能，所以手機只保留星塵閃爍，星盤圖案改成靜止不轉
+   （還是看得到，只是不再自己轉動）。平板以上維持完整效果。
+   塔羅卡牌在手機版只留 2 張（見 HeroTarotCards.tsx 用 Tailwind class 隱藏第 3 張），
+   保留的 2 張漂浮動畫不關閉——漂浮本身只是單一元素的 opacity 等級成本，跟旋轉一張
+   大圖不同，維持漂浮對效能影響可忽略，畫面也不會顯得擁擠。 */
 @media (max-width: 639px) {
   .hero-backdrop__ring--rotating {
     animation: none;
@@ -144,7 +167,7 @@ select {
 
 /* 使用者系統開啟「減少動態效果」時：
    - 進場只保留基本淡入，拿掉位移感與延遲交錯
-   - 背景旋轉／星點閃爍這類無限迴圈動畫直接關掉（元件本身也不會加上對應 class，
+   - 背景旋轉／星塵閃爍／卡牌漂浮這類無限迴圈動畫直接關掉（元件本身也不會加上對應 class，
      這裡是雙重保險：就算 JS 還沒 hydrate 完成，CSS 也會立刻生效，不會有動畫先跑一下的閃爍） */
 @media (prefers-reduced-motion: reduce) {
   .hero-fade-item {
@@ -163,7 +186,8 @@ select {
   }
 
   .hero-backdrop__ring--rotating,
-  .hero-backdrop__dots--twinkling {
+  .hero-backdrop__dots--twinkling,
+  .hero-card-float {
     animation: none !important;
   }
 }

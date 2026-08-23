@@ -1,16 +1,14 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import { motionConfig } from "@/lib/motionConfig";
 import { usePrefersReducedMotion } from "@/lib/useReducedMotion";
 
-// Hero 背景的氛圍層：純 CSS 畫出來的星點紋理＋一個呼應網站自己 favicon「星圖」意象
-// （圓圈＋經緯線＋金點，定義在 src/lib/iconArt.tsx）的大型線稿圖案，不是照片、不是插畫。
-//
-// Phase 1：淡入（進場動畫的第一個圖層）。
-// Phase 2（這裡）：加上整體極緩慢旋轉、星點呼吸閃爍——兩者都是自動播放的無限迴圈動畫，
-// 純 CSS keyframes 做，時間／透明度數值從 motionConfig.ts 讀，不寫死在這裡。
-// 使用者開啟「減少動態效果」時，這兩個迴圈動畫會整個關掉，只留下 Phase 1 的靜態淡入結果。
+// Hero 背景的氛圍層：星盤插畫（astro-wheel.webp）＋ 金色星塵插畫（gold-dust.webp）。
+// 這兩張圖取代了原本用 CSS 畫的圓圈／經緯線／點狀紋理，但動畫機制完全沿用——
+// class 名稱、旋轉／閃爍的 keyframe、reduced-motion／手機簡化的處理都沒有變，
+// 只是把「CSS 畫的圖案」換成「Image 元件」。
 //
 // 純裝飾用途，加上 aria-hidden 跟 pointer-events-none，不影響任何操作與無障礙閱讀順序。
 export default function HeroBackdrop() {
@@ -31,37 +29,30 @@ export default function HeroBackdrop() {
 
   return (
     <div aria-hidden className="hero-backdrop pointer-events-none absolute inset-0 overflow-hidden">
-      {/* 星點紋理：CSS radial-gradient 重複產生的點陣，不是圖片 */}
-      <div
-        className={`hero-backdrop__dots absolute inset-0 ${reducedMotion ? "" : "hero-backdrop__dots--twinkling"}`}
+      {/* 金色星塵：取代原本的 CSS 點狀紋理，鋪滿整個 Hero 背景 */}
+      <Image
+        src="/hero/gold-dust.webp"
+        alt=""
+        fill
+        sizes="100vw"
+        className={`hero-backdrop__dots object-cover ${reducedMotion ? "" : "hero-backdrop__dots--twinkling"}`}
         style={dotsStyle}
       />
 
-      {/* 呼應品牌 favicon 的圓圈＋經緯線圖案，刻意放大、偏移到右側，一部分延伸出畫面外，
-          營造「畫面之外還有更大一張星圖」的感覺，而不是置中的具象占星輪盤插畫。
-          整體極緩慢旋轉，一圈是分鐘等級（見 motionConfig.backdrop.rotationDurationSec）。 */}
-      <svg
-        className={`hero-backdrop__ring absolute -right-[18%] -top-[22%] h-[85%] w-[85%] sm:-right-[10%] sm:h-[110%] sm:w-[110%] ${
+      {/* 星盤插畫：取代原本用 CSS 畫的圓圈＋經緯線圖案，位置跟大小沿用原本的設定
+          （偏移到右側、一部分延伸出畫面外），整體極緩慢旋轉（見 motionConfig.backdrop）。 */}
+      <Image
+        src="/hero/astro-wheel.webp"
+        alt=""
+        width={1254}
+        height={1254}
+        priority
+        sizes="(min-width: 640px) 60vw, 85vw"
+        className={`hero-backdrop__ring absolute -right-[14%] top-[68%] h-[38%] w-[70%] object-contain object-right opacity-60 sm:-right-[8%] sm:-top-[10%] sm:h-[78%] sm:w-[72%] sm:opacity-100 md:-right-[4%] md:-top-[6%] md:h-[68%] md:w-[58%] lg:-right-[6%] lg:-top-[8%] lg:h-[95%] lg:w-[85%] ${
           reducedMotion ? "" : "hero-backdrop__ring--rotating"
         }`}
         style={ringStyle}
-        viewBox="0 0 400 400"
-        fill="none"
-      >
-        <circle cx="200" cy="200" r="170" stroke="var(--color-mist-gold)" strokeWidth="0.75" opacity="0.5" />
-        <circle cx="200" cy="200" r="120" stroke="var(--color-mist-blue)" strokeWidth="0.5" opacity="0.4" />
-        <ellipse
-          cx="200"
-          cy="200"
-          rx="60"
-          ry="170"
-          stroke="var(--color-mist-gold)"
-          strokeWidth="0.5"
-          opacity="0.35"
-        />
-        <line x1="30" y1="200" x2="370" y2="200" stroke="var(--color-mist-gold)" strokeWidth="0.5" opacity="0.35" />
-        <circle cx="200" cy="200" r="3" fill="var(--color-mist-gold)" opacity="0.6" />
-      </svg>
+      />
     </div>
   );
 }
