@@ -4,6 +4,7 @@
 // 之後要新增或修改系統資料，只需要照著這個型別去 src/data/systems.ts 加資料，
 // 不需要改任何程式邏輯。
 // ────────────────────────────────────────────────────────────
+import type { InputMode, RandomDrawConfig } from "./randomDraw";
 
 /** 使用者需要提供什麼類型的資料，系統才能進行解讀 */
 export type InputType =
@@ -126,6 +127,14 @@ export interface DivinationSystem {
   relatedSystems?: string[];
   /** 套用 promptTemplate.ts 模板、代入變數後的個別化 Prompt 說明片段 */
   promptTemplate: string;
+
+  // ── 以下為 Random Draw 功能新增欄位，全部 optional，既有系統不用補 ──
+  /** 這個系統需要的輸入型態（新版，取代/補充舊的 inputType）。沒有填的系統維持原本行為 */
+  inputMode?: InputMode[];
+  /** 是否需要使用者在網站上真正完成隨機抽取（洗牌／擲筊等），預設 false */
+  requiresRandomDraw?: boolean;
+  /** requiresRandomDraw 為 true 時才需要填，描述牌組／抽取規則 */
+  randomDraw?: RandomDrawConfig;
 }
 
 /** 問題意圖分類（Question Intent Taxonomy） */

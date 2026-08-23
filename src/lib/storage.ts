@@ -4,10 +4,12 @@
 // 這個網站沒有帳號系統、沒有後端資料庫。
 // ────────────────────────────────────────────────────────────
 import type { UserProfile } from "@/types/divination";
+import type { ReadingResult } from "@/types/randomDraw";
 
 const PROFILE_KEY = "gda:profile";
 const FAVORITES_KEY = "gda:favorites";
 const PROMPT_HISTORY_KEY = "gda:prompt-history";
+const READING_HISTORY_KEY = "gda:reading-history";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -102,12 +104,64 @@ export function addPromptHistory(entry: Omit<PromptHistoryEntry, "id" | "created
   }
 }
 
+// ── 抽牌／起卦歷史紀錄（Reading History） ─────────────────────
+// 跟上面的「Prompt 文字紀錄」是分開的兩件事：這裡存的是「使用者實際抽到什麼結果」
+// 的結構化資料（給 Random Draw 功能用），而不是最終產生的 Prompt 文字，
+// 所以獨立開一組 key，但沿用一樣的存取慣例（isBrowser 檢查、try-catch、上限筆數）。
+
+export interface ReadingHistoryEntry {
+  id: string;
+  timestamp: string; // ISO 字串
+  question: string;
+  systemId: string; // 對應 DivinationSystem.id
+  deckId?: string;
+  spreadId?: string;
+  results: ReadingResult["results"]; // 抽牌／起卦的實際結果
+}
+
+export function loadReadingHistory(): ReadingHistoryEntry[] {
+  if (!isBrowser()) return [];
+  try {
+    const raw = window.localStorage.getItem(READING_HISTORY_KEY);
+    return raw ? (JSON.parse(raw) as ReadingHistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addReadingHistoryEntry(entry: {
+  question: string;
+  systemId: string;
+  reading: ReadingResult;
+}): void {
+  if (!isBrowser()) return;
+  try {
+    const current = loadReadingHistory();
+    const next: ReadingHistoryEntry[] = [
+      {
+        id: crypto.randomUUID(),
+        timestamp: entry.reading.drawnAt,
+        question: entry.question,
+        systemId: entry.systemId,
+        deckId: entry.reading.deckId,
+        spreadId: entry.reading.spreadId,
+        results: entry.reading.results,
+      },
+      ...current,
+    ].slice(0, 50);
+    window.localStorage.setItem(READING_HISTORY_KEY, JSON.stringify(next));
+  } catch {
+    // 忽略
+  }
+}
+
 export function clearAllData(): void {
   if (!isBrowser()) return;
   try {
     window.localStorage.removeItem(PROFILE_KEY);
     window.localStorage.removeItem(FAVORITES_KEY);
     window.localStorage.removeItem(PROMPT_HISTORY_KEY);
+    window.localStorage.removeItem(READING_HISTORY_KEY);
   } catch {
     // 忽略
   }

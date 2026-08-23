@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import DrawInterface from "@/components/draw/DrawInterface";
 import { buildComparisonPrompt, buildPrompt } from "@/lib/promptGenerator";
 import { addPromptHistory, loadProfile, saveProfile } from "@/lib/storage";
 import type { DivinationSystem, PromptMode, UserProfile } from "@/types/divination";
+import type { ReadingResult } from "@/types/randomDraw";
 import PromptPreview from "./PromptPreview";
 
 const modes: PromptMode[] = ["Quick", "Standard", "Deep Research", "Expert"];
@@ -28,6 +30,8 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
   const [mode, setMode] = useState<PromptMode>("Standard");
   const [prompt, setPrompt] = useState<string | null>(null);
+  // key 是 system.id：這個系統要求真正抽牌時，存放使用者已經完成的抽牌結果
+  const [drawResults, setDrawResults] = useState<Record<string, ReadingResult>>({});
 
   // 只顯示「這次選到的系統」實際會用到的欄位，避免使用者要填一大堆用不到的資料
   const neededFields = useMemo(() => {
@@ -36,24 +40,60 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
     return set;
   }, [systems]);
 
+  // Tarot / Lenormand / Runes / I Ching 這類系統：要先在網站上真正抽完牌，才能繼續填資料、產生 Prompt
+  const drawRequiredSystems = useMemo(() => systems.filter((s) => s.requiresRandomDraw), [systems]);
+  const allDrawsComplete = drawRequiredSystems.every((s) => drawResults[s.id]);
+
   function updateProfile(patch: Partial<UserProfile>) {
     const next = { ...profile, ...patch };
     setProfile(next);
     saveProfile(next);
   }
 
+  function handleDrawComplete(systemId: string, result: ReadingResult) {
+    setDrawResults((prev) => ({ ...prev, [systemId]: result }));
+    setPrompt(null); // 抽牌結果變了，舊的 Prompt（如果有）已經跟畫面對不上，先清掉避免使用者誤用
+  }
+
+  function handleDrawReset(systemId: string) {
+    setDrawResults((prev) => {
+      const next = { ...prev };
+      delete next[systemId];
+      return next;
+    });
+    setPrompt(null);
+  }
+
   function handleGenerate() {
-    if (systems.length === 0) return;
+    if (systems.length === 0 || !allDrawsComplete) return;
     const result =
       systems.length === 1
-        ? buildPrompt({ system: systems[0], question, profile, mode })
-        : buildComparisonPrompt(systems, question, profile);
+        ? buildPrompt({ system: systems[0], question, profile, mode, drawResult: drawResults[systems[0].id] })
+        : buildComparisonPrompt(systems, question, profile, drawResults);
     setPrompt(result);
     addPromptHistory({ systemIds: systems.map((s) => s.id), question, prompt: result });
   }
 
   return (
     <div className="space-y-6">
+      {drawRequiredSystems.map((s) => (
+        <DrawInterface
+          key={s.id}
+          system={s}
+          question={question}
+          onComplete={(result) => handleDrawComplete(s.id, result)}
+          onReset={() => handleDrawReset(s.id)}
+        />
+      ))}
+
+      {!allDrawsComplete && drawRequiredSystems.length > 0 && (
+        <p className="rounded-2xl border hairline bg-ivory-soft p-5 text-sm text-charcoal-soft">
+          先完成上面的抽牌，才會出現填資料與產生 Prompt 的區塊。
+        </p>
+      )}
+
+      {allDrawsComplete && (
+        <>
       <div>
         <label className="mb-2 block text-sm font-medium text-charcoal">你的問題</label>
         <textarea
@@ -168,11 +208,13 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
       <button
         type="button"
         onClick={handleGenerate}
-        disabled={systems.length === 0}
+        disabled={systems.length === 0 || !allDrawsComplete}
         className="tap-target w-full rounded-full bg-mist-gold px-6 py-3.5 text-[15px] font-medium text-ivory transition-opacity hover:opacity-90 disabled:opacity-40 sm:w-auto"
       >
         產生 Prompt
       </button>
+        </>
+      )}
 
       {prompt && <PromptPreview prompt={prompt} />}
     </div>

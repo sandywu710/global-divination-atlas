@@ -51,6 +51,9 @@ function SiteHeader() {
           <Link href="/explore" className="tap-target flex items-center hover:text-charcoal">
             探索系統
           </Link>
+          <Link href="/history" className="tap-target flex items-center hover:text-charcoal">
+            抽牌紀錄
+          </Link>
         </nav>
       </div>
     </header>

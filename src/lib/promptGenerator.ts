@@ -5,14 +5,17 @@
 // 文字內容（警語、模式說明等）放在 src/data/promptTemplate.ts，
 // 這裡只負責「怎麼組合」的邏輯。
 // ────────────────────────────────────────────────────────────
-import { modeInstructions, responseStructure, spiritualClaimWarning, universalRules } from "@/data/promptTemplate";
+import { drawResultRules, modeInstructions, responseStructure, spiritualClaimWarning, universalRules } from "@/data/promptTemplate";
 import type { DivinationSystem, PromptMode, UserProfile } from "@/types/divination";
+import type { ReadingResult } from "@/types/randomDraw";
 
 export interface PromptBuildInput {
   system: DivinationSystem;
   question: string;
   profile: UserProfile;
   mode: PromptMode;
+  /** 系統要求 requiresRandomDraw 為 true 時，使用者已經在網站上真正抽出的結果 */
+  drawResult?: ReadingResult;
 }
 
 /** 依照系統需要的資料欄位，組出「使用者資訊」區塊；沒填的欄位標示為 [Not provided] */
@@ -35,7 +38,9 @@ function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem): str
     lines.push("Photo: [User will attach a photo separately, if applicable]");
   if (need.has("dreamDescription"))
     lines.push("Dream description: [User will describe their dream in detail below]");
-  if (need.has("randomSelection") || need.has("cards") || need.has("dice"))
+  // requiresRandomDraw 的系統，抽牌結果一律走下面 buildDrawResultsBlock() 那個獨立區塊，
+  // 不會、也不應該叫外部 AI「自己模擬抽牌」——這裡刻意跳過舊版的模擬提示文字。
+  if (!system.requiresRandomDraw && (need.has("randomSelection") || need.has("cards") || need.has("dice")))
     lines.push(
       "Random draw: [User should perform the traditional random draw/casting method themselves, or ask the AI to simulate a random draw and clearly label it as simulated]"
     );
@@ -44,14 +49,34 @@ function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem): str
   return lines.join("\n");
 }
 
+/** 把使用者在網站上實際抽到的結果，組成 AI 只能解讀、不能重新抽的區塊 */
+function buildDrawResultsBlock(reading: ReadingResult): string {
+  const resultLines = reading.results
+    .map((r, i) => {
+      const position = r.positionLabel ? `${r.positionLabel} — ` : "";
+      const orientation = r.reversed === undefined ? "" : r.reversed ? " (Reversed)" : " (Upright)";
+      return `${i + 1}. ${position}${r.itemName}${orientation}`;
+    })
+    .join("\n");
+  const rules = drawResultRules.map((r) => `- ${r}`).join("\n");
+
+  return `${reading.deckName ? `DECK: ${reading.deckName}\n` : ""}${reading.spreadName ? `SPREAD: ${reading.spreadName}\n` : ""}
+ACTUAL DRAW RESULTS (these items were randomly drawn by the user through the application's own random draw mechanism — they are not hypothetical):
+${resultLines}
+
+IMPORTANT — READ CAREFULLY:
+${rules}`;
+}
+
 /** 產生單一系統的完整 Prompt */
-export function buildPrompt({ system, question, profile, mode }: PromptBuildInput): string {
+export function buildPrompt({ system, question, profile, mode, drawResult }: PromptBuildInput): string {
   const userInfoBlock = buildUserInfoBlock(profile, system);
   const rules = [...universalRules, spiritualClaimWarning[system.spiritualClaimLevel], system.promptTemplate]
     .filter(Boolean)
     .map((r) => `- ${r}`)
     .join("\n");
   const structure = responseStructure.map((s, i) => `${i + 1}. ${s}`).join("\n");
+  const drawResultsSection = drawResult ? `\n${buildDrawResultsBlock(drawResult)}\n` : "";
 
   return `You are an experienced practitioner and researcher of ${system.name}${
     system.nativeNames?.length ? ` (${system.nativeNames.join(" / ")})` : ""
@@ -70,7 +95,7 @@ RESPONSE DEPTH: ${modeInstructions[mode]}
 
 USER INFORMATION:
 ${userInfoBlock}
-
+${drawResultsSection}
 QUESTION:
 ${question || "[User has not entered a specific question — provide a general reading]"}
 
@@ -81,10 +106,15 @@ Stay faithful to the traditional framework of ${system.name} throughout your res
 }
 
 /** 多系統比較用的 Prompt（Nice to Have 功能） */
-export function buildComparisonPrompt(systems: DivinationSystem[], question: string, profile: UserProfile): string {
+export function buildComparisonPrompt(
+  systems: DivinationSystem[],
+  question: string,
+  profile: UserProfile,
+  drawResults?: Record<string, ReadingResult>
+): string {
   const sections = systems
     .map((system, i) => {
-      const body = buildPrompt({ system, question, profile, mode: "Standard" });
+      const body = buildPrompt({ system, question, profile, mode: "Standard", drawResult: drawResults?.[system.id] });
       return `--- SYSTEM ${i + 1}: ${system.name} ---\n${body}`;
     })
     .join("\n\n");

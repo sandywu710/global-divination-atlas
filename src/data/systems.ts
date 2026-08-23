@@ -8,6 +8,7 @@
 //   - 調整某系統適合的問題類型 → 改 whatItCanExplore / idealQuestions
 // 都不需要碰任何 .tsx 元件或邏輯程式碼。
 // ────────────────────────────────────────────────────────────
+import { riderWaiteTarotDeck, tarotSpreads } from "@/data/decks/riderWaiteTarot";
 import type { DivinationSystem } from "@/types/divination";
 
 export const systems: DivinationSystem[] = [
@@ -738,12 +739,24 @@ export const systems: DivinationSystem[] = [
     spiritualClaimLevel: "symbolic",
     promptLanguage: "English",
     methodologySummary:
-      "The user draws cards (physically or via a simulated random draw) into a chosen spread (e.g. three-card, Celtic Cross), then interprets each card's traditional Rider-Waite-Smith symbolism, position meaning, and card-to-card relationships in context of the question.",
+      "The user draws cards through the application's own random draw mechanism (Fisher-Yates shuffle, no replacement, independent reversed/upright roll per card) into a chosen spread, then interprets each card's traditional Rider-Waite-Smith symbolism, position meaning, and card-to-card relationships in context of the question.",
     limitations:
       "牌卡的意義高度仰賴牌陣位置與問題脈絡；這是象徵性的反思工具，抽牌結果不代表命定的事實。",
     relatedSystems: ["marseille-tarot", "thoth-tarot", "lenormand"],
     promptTemplate:
-      "If the user has not specified which cards were drawn, either ask them to provide the draw or clearly simulate one and label it as 'AI-simulated draw, for illustrative purposes.'",
+      "The cards listed below were already drawn by the user through the application's own random draw mechanism before this prompt was written — treat them as fixed, real input, not as something to simulate or regenerate.",
+    // ── Random Draw 設定：使用者在網站上真正抽牌，不是叫 AI 模擬 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "tarot-card-draw",
+      deckId: riderWaiteTarotDeck.id,
+      drawCounts: [1, 3],
+      spreads: tarotSpreads,
+      allowRepeats: false,
+      supportsReversed: true,
+      reversedProbability: 0.5,
+    },
   },
   {
     id: "marseille-tarot",
