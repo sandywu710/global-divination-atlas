@@ -32,7 +32,7 @@ export const motionConfig = {
     /** 星點閃爍時的透明度範圍 */
     twinkleMinOpacity: 0.35,
     twinkleMaxOpacity: 0.7,
-    /** 整個背景紋理層的基礎透明度上限（乘在 twinkle 的結果上），確保視覺上足夠安靜 */
+    /** 使用者開啟「減少動態效果」時，星點紋理固定使用這個透明度（不閃爍、不旋轉） */
     baseOpacity: 0.5,
   },
 

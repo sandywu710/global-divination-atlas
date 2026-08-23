@@ -83,10 +83,45 @@ body {
 .hero-backdrop__dots {
   background-image: radial-gradient(circle, var(--color-mist-gold) 1px, transparent 1.6px);
   background-size: 42px 42px;
-  opacity: 0.35;
+  opacity: var(--hero-twinkle-min, 0.35);
 }
 
-/* 使用者系統開啟「減少動態效果」時：進場只保留基本淡入，拿掉位移感與延遲交錯 */
+/* 星點呼吸閃爍：在 min／max 透明度之間緩慢來回，模擬星塵微微閃爍的感覺。
+   只用 opacity（GPU 合成），不會觸發 layout／repaint。 */
+@keyframes hero-twinkle {
+  0%,
+  100% {
+    opacity: var(--hero-twinkle-min, 0.35);
+  }
+  50% {
+    opacity: var(--hero-twinkle-max, 0.7);
+  }
+}
+
+.hero-backdrop__dots--twinkling {
+  animation: hero-twinkle var(--hero-twinkle-duration, 7s) ease-in-out infinite;
+}
+
+/* 星圖圖案的極緩慢整體旋轉：一圈是分鐘等級，只用 transform（GPU 合成）。
+   transform-origin 用預設的 50% 50%，剛好對齊 SVG 裡圓心（viewBox 200,200）。 */
+@keyframes hero-rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hero-backdrop__ring--rotating {
+  animation: hero-rotate-slow var(--hero-rotate-duration, 240s) linear infinite;
+  will-change: transform;
+}
+
+/* 使用者系統開啟「減少動態效果」時：
+   - 進場只保留基本淡入，拿掉位移感與延遲交錯
+   - 背景旋轉／星點閃爍這類無限迴圈動畫直接關掉（元件本身也不會加上對應 class，
+     這裡是雙重保險：就算 JS 還沒 hydrate 完成，CSS 也會立刻生效，不會有動畫先跑一下的閃爍） */
 @media (prefers-reduced-motion: reduce) {
   .hero-fade-item {
     animation-duration: 200ms;
@@ -101,5 +136,10 @@ body {
     to {
       opacity: 1;
     }
+  }
+
+  .hero-backdrop__ring--rotating,
+  .hero-backdrop__dots--twinkling {
+    animation: none !important;
   }
 }
