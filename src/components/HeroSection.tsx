@@ -1,9 +1,11 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import HeroBackdrop from "./HeroBackdrop";
 import { motionConfig } from "@/lib/motionConfig";
+import { useHeroParallax } from "@/lib/useHeroParallax";
+import { usePrefersReducedMotion } from "@/lib/useReducedMotion";
 
 interface HeroSectionProps {
   systemsCount: number;
@@ -21,16 +23,37 @@ function fadeStyle(order: number): CSSProperties {
   } as CSSProperties;
 }
 
-// 首頁 Hero：視覺、文案、排版跟原本完全一樣，這裡只新增「背景氛圍層」跟「依序淡入浮現」的
-// 進場動畫。所有動畫數值都從 src/lib/motionConfig.ts 讀取，不在這裡寫死任何時間或位移數字。
+// 首頁 Hero：視覺、文案、排版跟原本完全一樣，這裡只新增「背景氛圍層」「依序淡入浮現」的
+// 進場動畫，以及桌機才有的滑鼠視差。所有動畫數值都從 src/lib/motionConfig.ts 讀取，
+// 不在這裡寫死任何時間或位移數字。
 export default function HeroSection({ systemsCount, regionCount }: HeroSectionProps) {
+  const sectionRef = useRef<HTMLElement>(null);
+  // 這兩個 ref 各自是獨立的 wrapper，專門給滑鼠視差的 JS 直接改 transform 用，
+  // 跟裡面負責進場動畫／自動旋轉的 CSS animation 分開在不同的 DOM 節點，避免兩者互搶
+  // transform 屬性（CSS animation 在 forwards 模式下會持續蓋掉同一個元素的 inline transform）。
+  const backdropParallaxRef = useRef<HTMLDivElement>(null);
+  const contentParallaxRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = usePrefersReducedMotion();
+
+  useHeroParallax({
+    sectionRef,
+    backdropRef: backdropParallaxRef,
+    contentRef: contentParallaxRef,
+    enabled: !reducedMotion,
+  });
+
   return (
-    <section className="relative overflow-hidden">
-      <div className="hero-fade-item absolute inset-0" style={fadeStyle(0)}>
-        <HeroBackdrop />
+    <section ref={sectionRef} className="relative overflow-hidden">
+      <div ref={backdropParallaxRef} className="absolute inset-0">
+        <div className="hero-fade-item absolute inset-0" style={fadeStyle(0)}>
+          <HeroBackdrop />
+        </div>
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-24">
+      <div
+        ref={contentParallaxRef}
+        className="relative mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-24"
+      >
         <p className="hero-fade-item text-sm tracking-widest text-mist-gold" style={fadeStyle(1)}>
           GLOBAL DIVINATION ATLAS
         </p>
