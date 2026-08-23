@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
+/* ────────────────────────────────────────────────────────────
+   視覺基調：編輯誌 × 博物館 × 數位典藏
+   暖象牙白、炭灰、霧藍、淺米、霧金。大量留白，不做水晶紫／廟宇風。
+   想調色盤，改這裡的色碼就好，元件都是引用這些變數。
+   ──────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-ivory: #f7f3ea;
+  --color-ivory-soft: #efe9db;
+  --color-paper: #fbf9f4;
+  --color-charcoal: #2a2926;
+  --color-charcoal-soft: #57544c;
+  --color-mist-blue: #93a9b8;
+  --color-mist-gold: #b99a63;
+  --color-line: #ded5c0;
+  --color-accent-red: #a8493a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-ivory: var(--color-ivory);
+  --color-ivory-soft: var(--color-ivory-soft);
+  --color-paper: var(--color-paper);
+  --color-charcoal: var(--color-charcoal);
+  --color-charcoal-soft: var(--color-charcoal-soft);
+  --color-mist-blue: var(--color-mist-blue);
+  --color-mist-gold: var(--color-mist-gold);
+  --color-line: var(--color-line);
+  --color-accent-red: var(--color-accent-red);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-fraunces), "Noto Serif TC", serif;
+  --font-sans: var(--font-noto-sans), var(--font-geist-sans), "PingFang TC", "Microsoft JhengHei", sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans);
+}
+
+/* 讓可點擊元素在手機上至少有 44x44px 的可點擊範圍，避免誤觸 */
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 細緻的分隔線，取代預設陰影，維持編輯誌的乾淨感 */
+.hairline {
+  border-color: var(--color-line);
+}
+
+::selection {
+  background: var(--color-mist-gold);
+  color: var(--color-paper);
 }

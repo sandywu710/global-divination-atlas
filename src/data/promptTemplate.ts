@@ -1,0 +1,51 @@
+// ────────────────────────────────────────────────────────────
+// Prompt 文案內容（純文字，不含邏輯）
+// 這裡放的是「最後產生出來的英文 Prompt」裡會用到的固定文字段落。
+// 想要調整 Prompt 的語氣、規則、輸出格式 → 改這個檔案。
+// 想要改「怎麼把這些文字組合起來」的邏輯 → 改 src/lib/promptGenerator.ts。
+// ────────────────────────────────────────────────────────────
+import type { DivinationSystem, PromptMode } from "@/types/divination";
+
+/** 依照系統的「靈性宣稱強度」，在 Prompt 裡加上對應強度的警語 */
+export const spiritualClaimWarning: Record<DivinationSystem["spiritualClaimLevel"], string> = {
+  symbolic:
+    "Treat this entirely as a symbolic / reflective framework. Do not claim any supernatural, psychic, or metaphysical ability.",
+  traditional:
+    "Present this as a traditional interpretive framework passed down historically. Do not present it as scientifically proven.",
+  spiritual:
+    "This system involves spiritual or esoteric claims (e.g. karma, past lives, akashic-style records). Clearly frame all such statements as 'within this tradition's belief system' rather than as verified fact. Do not claim to channel spirits, access supernatural databases, or possess psychic ability.",
+};
+
+/** Prompt 品質模式的說明文字 */
+export const modeInstructions: Record<PromptMode, string> = {
+  Quick:
+    "Keep the interpretation concise and practical — focus on directly answering the question in a few clear paragraphs. Skip lengthy methodology explanations.",
+  Standard:
+    "Provide a complete, well-structured interpretation following all sections below in reasonable depth.",
+  "Deep Research":
+    "Go deeper: explain the methodology in more detail, cite the traditional concepts/terminology you're applying, compare possible interpretations where the symbolism is ambiguous, and explicitly flag uncertainty. Avoid generic, one-size-fits-all statements — every claim should be traceable to a specific traditional principle.",
+  Expert:
+    "Respond as a scholar-practitioner speaking to another serious student of this tradition — not as a casual fortune-teller. Use precise traditional terminology (with brief definitions), and prioritize methodological rigor over comforting language.",
+};
+
+/** 所有系統共用的核心規則（不可宣稱科學驗證、不可捏造史料等） */
+export const universalRules: string[] = [
+  "Explain which traditional principles, terms, or structures you are using, in plain language.",
+  "Do not present spiritual or divinatory interpretations as scientifically proven facts.",
+  "Do not fabricate historical sources, texts, or lineage claims that do not exist.",
+  "Clearly distinguish between \"traditional interpretation\" and \"your own inference / extrapolation.\"",
+  'If the information provided below is insufficient for a proper reading, say so explicitly ("Insufficient information for X") instead of inventing details.',
+  "Avoid vague, generic, horoscope-style statements. Every statement should be traceable back to a specific traditional principle or symbol.",
+];
+
+/** 回應結構（八段式） */
+export const responseStructure: string[] = [
+  "Methodology (what you are about to do, and why, according to this system)",
+  "Relevant chart / symbolic structure (based on the information given)",
+  "Traditional interpretation",
+  "Answer to my specific question",
+  "Timing / future themes (if applicable to this system)",
+  "Important uncertainties or assumptions you had to make",
+  "Key takeaways",
+  "Practical reflection questions for me to sit with",
+];
