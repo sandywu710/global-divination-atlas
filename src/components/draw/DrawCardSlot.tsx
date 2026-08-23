@@ -34,9 +34,13 @@ export default function DrawCardSlot({ item, result, flipped, onFlip }: DrawCard
         </div>
       </div>
 
-      {/* 永遠正立的文字說明：牌名 + 正位／逆位，逆位時卡面本身是上下顛倒的，這裡才是好讀的版本 */}
+      {/* 永遠正立的文字說明：牌名 + 正位／逆位，逆位時卡面本身是上下顛倒的，這裡才是好讀的版本。
+          result.reversed 是 undefined 代表這套牌組根本不看正逆位（例如 Lenormand），
+          這時候不該顯示「正位」，因為那個概念在這套牌組裡不成立。 */}
       <p className="min-h-[1.25rem] text-center text-xs text-charcoal-soft">
-        {flipped ? `${result.itemName} · ${result.reversed ? "逆位 Reversed" : "正位 Upright"}` : ""}
+        {flipped
+          ? `${result.itemName}${result.reversed === undefined ? "" : result.reversed ? " · 逆位 Reversed" : " · 正位 Upright"}`
+          : ""}
       </p>
     </div>
   );

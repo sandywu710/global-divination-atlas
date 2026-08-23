@@ -8,6 +8,7 @@
 //   - 調整某系統適合的問題類型 → 改 whatItCanExplore / idealQuestions
 // 都不需要碰任何 .tsx 元件或邏輯程式碼。
 // ────────────────────────────────────────────────────────────
+import { lenormandDeck, lenormandSpreads } from "@/data/decks/lenormand";
 import { riderWaiteTarotDeck, tarotSpreads } from "@/data/decks/riderWaiteTarot";
 import type { DivinationSystem } from "@/types/divination";
 
@@ -841,12 +842,23 @@ export const systems: DivinationSystem[] = [
     spiritualClaimLevel: "symbolic",
     promptLanguage: "English",
     methodologySummary:
-      "Draw cards into small combination-based spreads (e.g. 3-card lines) and interpret them primarily through card-to-card combinations (e.g. 'Ship + Money' = income from travel/trade) rather than isolated card symbolism, following Lenormand's literal, practical interpretive style.",
+      "The user draws cards through the application's own random draw mechanism (Fisher-Yates shuffle, no replacement) into a small combination-based spread (1, 3, or 5 cards), then interprets them primarily through card-to-card combinations (e.g. 'Ship + Money' = income from travel/trade) rather than isolated card symbolism, following Lenormand's literal, practical interpretive style. Traditional Lenormand reading does not use reversed meanings.",
     limitations:
       "牌意直接、務實，較少心理層面的象徵深度；適合具體、短期的實際問題，不適合探索抽象的靈性或人生意義主題。",
     relatedSystems: ["rider-waite-tarot", "cartomancy"],
     promptTemplate:
-      "Interpret primarily through card combinations (adjacent card pairs/lines), not isolated single-card symbolism — this is core to authentic Lenormand method.",
+      "Interpret primarily through card combinations (adjacent card pairs/lines), not isolated single-card symbolism — this is core to authentic Lenormand method. The cards listed below were already drawn by the user through the application's own random draw mechanism before this prompt was written.",
+    // ── Random Draw 設定：完全沿用 Tarot 的引擎與 UI，只是換一份牌組資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "lenormand-card-draw",
+      deckId: lenormandDeck.id,
+      drawCounts: [1, 3, 5],
+      spreads: lenormandSpreads,
+      allowRepeats: false,
+      supportsReversed: false, // 傳統雷諾曼卡讀法不看正逆位
+    },
   },
   {
     id: "cartomancy",

@@ -141,10 +141,10 @@ export default function DrawInterface({ system, question, onComplete, onReset }:
               : "已經抽完，以下是這次的抽牌結果。"}
           </p>
 
-          <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: `repeat(${Math.min(reading.results.length, 3)}, minmax(0, 1fr))` }}
-          >
+          {/* 用 auto-fit 讓 1／3／5 張（甚至未來更多張）都能依容器寬度自動排列，
+              不用針對每種抽牌張數各寫一組斷點 class */}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(84px,1fr))] gap-3 sm:gap-4">
+
             {reading.results.map((result, index) => {
               const item = itemsById.get(result.itemId);
               if (!item) return null; // 理論上不會發生（結果一定來自同一個 deck）
