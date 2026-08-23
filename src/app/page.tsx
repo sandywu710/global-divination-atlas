@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HeroSection from "@/components/HeroSection";
 import SystemCard from "@/components/SystemCard";
 import { systems } from "@/data/systems";
 
@@ -11,39 +12,7 @@ const highlights = highlightIds.map((id) => systems.find((s) => s.id === id)).fi
 export default function Home() {
   return (
     <div>
-      <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-24">
-        <p className="text-sm tracking-widest text-mist-gold">GLOBAL DIVINATION ATLAS</p>
-        <h1 className="mt-4 font-serif text-[13vw] leading-[0.95] text-charcoal sm:text-6xl md:text-7xl">
-          GLOBAL
-          <br />
-          DIVINATION
-          <br />
-          ATLAS
-        </h1>
-        <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-charcoal-soft sm:text-base">
-          {systems.length}+ traditions · {regionCount}+ regions · One question.
-        </p>
-        <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-charcoal-soft sm:text-base">
-          From Chinese metaphysics to Vedic astrology, Tarot, Ifá, Geomancy and modern spiritual
-          systems — explore how different cultures have interpreted fate, timing, relationships,
-          and the unknown.
-        </p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/analyzer"
-            className="tap-target flex items-center justify-center rounded-full bg-charcoal px-6 py-3.5 text-[15px] font-medium text-ivory transition-opacity hover:opacity-90"
-          >
-            Ask My Question
-          </Link>
-          <Link
-            href="/explore"
-            className="tap-target flex items-center justify-center rounded-full border hairline bg-paper px-6 py-3.5 text-[15px] font-medium text-charcoal transition-colors hover:border-charcoal/50"
-          >
-            Explore All Systems
-          </Link>
-        </div>
-      </section>
+      <HeroSection systemsCount={systems.length} regionCount={regionCount} />
 
       <section className="border-t hairline bg-ivory-soft px-5 py-14 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-6xl">

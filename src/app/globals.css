@@ -53,3 +53,53 @@ body {
   background: var(--color-mist-gold);
   color: var(--color-paper);
 }
+
+/* ────────────────────────────────────────────────────────────
+   首頁 Hero 動態效果
+   實際的時間長度／位移幅度數值全部來自 src/lib/motionConfig.ts，
+   透過 inline style 的 CSS 變數傳進來——這裡只定義「動畫長什麼樣子」的結構，
+   不寫死任何數字，想調參數改 motionConfig.ts 就好。
+   ──────────────────────────────────────────────────────────── */
+
+/* 進場動畫：淡入＋輕微上浮。--hero-* 變數由 HeroSection.tsx 依序賦值，做出交錯效果 */
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--hero-rise, 14px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-fade-item {
+  opacity: 0;
+  animation: hero-fade-up var(--hero-duration, 700ms) var(--hero-easing, ease-out) forwards;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+/* Hero 背景氛圍層：星點紋理（純 CSS radial-gradient 重複產生，不是圖片） */
+.hero-backdrop__dots {
+  background-image: radial-gradient(circle, var(--color-mist-gold) 1px, transparent 1.6px);
+  background-size: 42px 42px;
+  opacity: 0.35;
+}
+
+/* 使用者系統開啟「減少動態效果」時：進場只保留基本淡入，拿掉位移感與延遲交錯 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-fade-item {
+    animation-duration: 200ms;
+    animation-delay: 0ms;
+    animation-name: hero-fade-only;
+  }
+
+  @keyframes hero-fade-only {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
