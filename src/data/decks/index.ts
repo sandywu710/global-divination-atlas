@@ -5,10 +5,12 @@
 import type { DeckDefinition } from "@/types/randomDraw";
 import { lenormandDeck } from "./lenormand";
 import { riderWaiteTarotDeck } from "./riderWaiteTarot";
+import { runesDeck } from "./runes";
 
 export const decks: Record<string, DeckDefinition> = {
   [riderWaiteTarotDeck.id]: riderWaiteTarotDeck,
   [lenormandDeck.id]: lenormandDeck,
+  [runesDeck.id]: runesDeck,
 };
 
 export function getDeckById(id: string): DeckDefinition | undefined {

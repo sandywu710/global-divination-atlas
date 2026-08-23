@@ -38,6 +38,9 @@ export interface DeckItem {
   number?: number;
   /** 這張牌是否看正逆位；預設 true，個別牌可以在資料層覆寫成 false（例如對稱字形的符文） */
   reversible?: boolean;
+  /** 選填：這個項目本身的文字符號（例如符文的 Unicode Runic 字符）。純文字，不是圖片，
+   *  沒有版權疑慮；CardFace 有值時會優先顯示這個字符，取代通用幾何圖示。 */
+  glyph?: string;
 }
 
 export interface DeckDefinition {

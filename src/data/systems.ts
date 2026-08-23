@@ -10,6 +10,7 @@
 // ────────────────────────────────────────────────────────────
 import { lenormandDeck, lenormandSpreads } from "@/data/decks/lenormand";
 import { riderWaiteTarotDeck, tarotSpreads } from "@/data/decks/riderWaiteTarot";
+import { runesDeck, runeSpreads } from "@/data/decks/runes";
 import type { DivinationSystem } from "@/types/divination";
 
 export const systems: DivinationSystem[] = [
@@ -915,12 +916,24 @@ export const systems: DivinationSystem[] = [
     spiritualClaimLevel: "symbolic",
     promptLanguage: "English",
     methodologySummary:
-      "Draw one or more runes (Elder Futhark, 24 runes) at random, and interpret their traditional mythological and symbolic meanings — including reversed/merkstave meanings where applicable — in the context of the question.",
+      "The user draws one or more runes through the application's own random draw mechanism (Fisher-Yates shuffle, no replacement) and interprets their traditional mythological and symbolic meanings — including reversed/merkstave meanings where applicable — in the context of the question. A small number of runes (Gebo, Hagalaz, Isa, Jera, Ingwaz, Dagaz, Othala) are symmetric and traditionally have no separate reversed meaning.",
     limitations:
       "符文的神話脈絡（北歐神話）與現代提問情境有文化距離，解讀時應誠實區分「古代神話原意」與「現代象徵引申」。",
     relatedSystems: ["ogham"],
     promptTemplate:
-      "Distinguish between the rune's original mythological/historical meaning and any modern symbolic extension you apply to the user's question.",
+      "Distinguish between the rune's original mythological/historical meaning and any modern symbolic extension you apply to the user's question. The runes listed below were already drawn by the user through the application's own random draw mechanism before this prompt was written.",
+    // ── Random Draw 設定：完全沿用 Tarot／Lenormand 的引擎與 UI，只是換一份符文資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "rune-draw",
+      deckId: runesDeck.id,
+      drawCounts: [1, 3],
+      spreads: runeSpreads,
+      allowRepeats: false,
+      supportsReversed: true,
+      reversedProbability: 0.5,
+    },
   },
   {
     id: "ogham",

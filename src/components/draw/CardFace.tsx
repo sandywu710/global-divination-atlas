@@ -6,6 +6,16 @@ import type { DeckItem } from "@/types/randomDraw";
 function CardGlyph({ item }: { item: DeckItem }) {
   const stroke = "var(--color-mist-gold)";
 
+  // 有些牌組（例如符文）本身就是文字符號，直接顯示那個符號最貼切、也最忠於傳統——
+  // 這是純文字，不是圖片，沒有版權疑慮。
+  if (item.glyph) {
+    return (
+      <span className="text-4xl leading-none text-mist-gold" style={{ fontFamily: "serif" }} aria-hidden>
+        {item.glyph}
+      </span>
+    );
+  }
+
   if (item.arcana === "major") {
     return (
       <svg viewBox="0 0 48 48" className="h-12 w-12" fill="none">
