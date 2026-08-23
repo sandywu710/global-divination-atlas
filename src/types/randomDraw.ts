@@ -62,13 +62,30 @@ export interface RandomDrawConfig {
   reversedProbability?: number; // 逆位機率，預設 0.5，資料層可調整，不寫死在程式碼裡
 }
 
-/** 單一張牌／符文的抽取結果 */
+/**
+ * I Ching 專用設定：三枚銅板法起卦。跟卡牌類的 RandomDrawConfig 是完全不同的形狀
+ * （沒有 deckId／spreads 這種概念），刻意不硬套卡牌類的型別。
+ */
+export interface CoinTossHexagramConfig {
+  randomizationMethod: "coin-toss-hexagram";
+  /** 銅板正面的計數值，傳統上是 3；放在資料層而不是寫死在程式邏輯裡 */
+  headsValue: number;
+  /** 銅板反面的計數值，傳統上是 2 */
+  tailsValue: number;
+}
+
+/** DivinationSystem.randomDraw 可能是卡牌類設定，也可能是 I Ching 的銅板法設定 */
+export type AnyRandomDrawConfig = RandomDrawConfig | CoinTossHexagramConfig;
+
+/** 單一張牌／符文的抽取結果；I Ching 則用它來表示「單一爻」的起卦結果 */
 export interface DrawResult {
-  itemId: string; // DeckItem.id
+  itemId: string; // DeckItem.id；I Ching 用 "line-1"~"line-6" 代表由下往上第幾爻
   itemName: string; // 抽當下的名稱快照，即使之後牌組資料改名也不影響歷史紀錄
-  positionIndex: number; // 抽出的順序（0-based）
-  positionLabel?: string; // 牌陣位置名稱，例如 "Past"
+  positionIndex: number; // 抽出的順序（0-based）；I Ching 是由下往上的爻位（0=最下面）
+  positionLabel?: string; // 牌陣位置名稱，例如 "Past"；I Ching 用 "Line 1 (bottom)" 這種
   reversed?: boolean; // 只有支援正逆位的牌組才有意義
+  /** 只有 I Ching 用：這一爻是否為變爻（老陰／老陽） */
+  changing?: boolean;
 }
 
 /** 一次完整的抽牌／起卦結果，會被存進 Reading History，也會被送進 Prompt Generator */
@@ -80,4 +97,11 @@ export interface ReadingResult {
   spreadName?: string;
   drawnAt: string; // ISO 字串
   results: DrawResult[];
+  // ── 以下只有 I Ching（coin-toss-hexagram）會用到 ──
+  /** 本卦名稱，例如 "29. The Abysmal" */
+  hexagramName?: string;
+  /** 之卦名稱；只有存在變爻時才有 */
+  resultingHexagramName?: string;
+  /** 變爻的爻位（0-based，由下往上），沒有變爻時是空陣列 */
+  changingLineIndices?: number[];
 }

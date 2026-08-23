@@ -4,7 +4,7 @@
 // 之後要新增或修改系統資料，只需要照著這個型別去 src/data/systems.ts 加資料，
 // 不需要改任何程式邏輯。
 // ────────────────────────────────────────────────────────────
-import type { InputMode, RandomDrawConfig } from "./randomDraw";
+import type { AnyRandomDrawConfig, InputMode } from "./randomDraw";
 
 /** 使用者需要提供什麼類型的資料，系統才能進行解讀 */
 export type InputType =
@@ -133,8 +133,8 @@ export interface DivinationSystem {
   inputMode?: InputMode[];
   /** 是否需要使用者在網站上真正完成隨機抽取（洗牌／擲筊等），預設 false */
   requiresRandomDraw?: boolean;
-  /** requiresRandomDraw 為 true 時才需要填，描述牌組／抽取規則 */
-  randomDraw?: RandomDrawConfig;
+  /** requiresRandomDraw 為 true 時才需要填，描述牌組／抽取規則（或 I Ching 的銅板法規則） */
+  randomDraw?: AnyRandomDrawConfig;
 }
 
 /** 問題意圖分類（Question Intent Taxonomy） */

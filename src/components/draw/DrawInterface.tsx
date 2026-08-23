@@ -5,7 +5,7 @@ import { getDeckById } from "@/data/decks";
 import { addReadingHistoryEntry } from "@/lib/storage";
 import { DrawConfigError, runRandomDraw } from "@/lib/randomDraw/engine";
 import type { DivinationSystem } from "@/types/divination";
-import type { ReadingResult, SpreadDefinition } from "@/types/randomDraw";
+import type { RandomDrawConfig, ReadingResult, SpreadDefinition } from "@/types/randomDraw";
 import DrawCardSlot from "./DrawCardSlot";
 
 interface DrawInterfaceProps {
@@ -19,11 +19,15 @@ interface DrawInterfaceProps {
 
 type Stage = "select" | "revealing" | "done";
 
-// Before / During / After 三階段的抽牌畫面。
+// Before / During / After 三階段的抽牌畫面，給卡牌類系統（Tarot／Lenormand／Runes...）用。
+// I Ching 的三枚銅板法機制完全不同，用獨立的 IChingCastInterface 元件（見同資料夾）。
 // 這是 Random Draw 功能唯一的互動入口：抽牌邏輯（Random Draw Engine）永遠拿不到
 // question，這裡的 question 只用來顯示，維持「隨機屬於應用程式」的原則。
 export default function DrawInterface({ system, question, onComplete, onReset }: DrawInterfaceProps) {
-  const config = system.randomDraw;
+  // 這個元件只給卡牌類系統用（PromptGenerator 已經依 randomizationMethod 分流），
+  // 這裡窄化型別把 CoinTossHexagramConfig 排除掉，避免誤用到不存在的 deckId/spreads 欄位
+  const config: RandomDrawConfig | undefined =
+    system.randomDraw?.randomizationMethod !== "coin-toss-hexagram" ? system.randomDraw : undefined;
   const [stage, setStage] = useState<Stage>("select");
   const [selectedSpreadId, setSelectedSpreadId] = useState<string | null>(config?.spreads[0]?.id ?? null);
   const [reading, setReading] = useState<ReadingResult | null>(null);

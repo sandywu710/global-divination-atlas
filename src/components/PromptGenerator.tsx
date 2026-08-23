@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import DrawInterface from "@/components/draw/DrawInterface";
+import IChingCastInterface from "@/components/draw/IChingCastInterface";
 import { buildComparisonPrompt, buildPrompt } from "@/lib/promptGenerator";
 import { addPromptHistory, loadProfile, saveProfile } from "@/lib/storage";
 import type { DivinationSystem, PromptMode, UserProfile } from "@/types/divination";
@@ -76,15 +77,25 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
 
   return (
     <div className="space-y-6">
-      {drawRequiredSystems.map((s) => (
-        <DrawInterface
-          key={s.id}
-          system={s}
-          question={question}
-          onComplete={(result) => handleDrawComplete(s.id, result)}
-          onReset={() => handleDrawReset(s.id)}
-        />
-      ))}
+      {drawRequiredSystems.map((s) =>
+        s.randomDraw?.randomizationMethod === "coin-toss-hexagram" ? (
+          <IChingCastInterface
+            key={s.id}
+            system={s}
+            question={question}
+            onComplete={(result) => handleDrawComplete(s.id, result)}
+            onReset={() => handleDrawReset(s.id)}
+          />
+        ) : (
+          <DrawInterface
+            key={s.id}
+            system={s}
+            question={question}
+            onComplete={(result) => handleDrawComplete(s.id, result)}
+            onReset={() => handleDrawReset(s.id)}
+          />
+        )
+      )}
 
       {!allDrawsComplete && drawRequiredSystems.length > 0 && (
         <p className="rounded-2xl border hairline bg-ivory-soft p-5 text-sm text-charcoal-soft">

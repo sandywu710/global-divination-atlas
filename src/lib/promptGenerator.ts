@@ -49,8 +49,27 @@ function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem): str
   return lines.join("\n");
 }
 
-/** 把使用者在網站上實際抽到的結果，組成 AI 只能解讀、不能重新抽的區塊 */
-function buildDrawResultsBlock(reading: ReadingResult): string {
+/** I Ching（三枚銅板法）專用格式：本卦／之卦／變爻位置，跟卡牌類的格式邏輯相同但形狀不同 */
+function buildHexagramResultsBlock(reading: ReadingResult): string {
+  const lineDetail = reading.results
+    .map((r, i) => `${i + 1}. ${r.itemName}`)
+    .join(" / ");
+  const changingLines = (reading.changingLineIndices ?? []).map((i) => i + 1);
+  const rules = drawResultRules.map((r) => `- ${r}`).join("\n");
+
+  return `METHOD: 3-Coin Method (I Ching)
+
+ACTUAL CAST RESULT (this hexagram was cast by the user through the application's own coin-toss mechanism — it is not hypothetical):
+Primary Hexagram: ${reading.hexagramName}
+Lines (bottom to top): ${lineDetail}
+${changingLines.length > 0 ? `Changing lines: ${changingLines.join(", ")} (counting from the bottom)\nResulting Hexagram: ${reading.resultingHexagramName}` : "No changing lines — read the primary hexagram only."}
+
+IMPORTANT — READ CAREFULLY:
+${rules}`;
+}
+
+/** 卡牌類（Tarot／Lenormand／Runes...）格式：依抽出順序列出每一項的名稱與正逆位 */
+function buildCardResultsBlock(reading: ReadingResult): string {
   const resultLines = reading.results
     .map((r, i) => {
       const position = r.positionLabel ? `${r.positionLabel} — ` : "";
@@ -66,6 +85,12 @@ ${resultLines}
 
 IMPORTANT — READ CAREFULLY:
 ${rules}`;
+}
+
+/** 把使用者在網站上實際抽到／起卦的結果，組成 AI 只能解讀、不能重新抽／重新起卦的區塊。
+ *  卡牌類跟 I Ching 的資料形狀不同，所以格式邏輯分開處理，但規則（IMPORTANT — READ CAREFULLY）共用。 */
+function buildDrawResultsBlock(reading: ReadingResult): string {
+  return reading.method === "coin-toss-hexagram" ? buildHexagramResultsBlock(reading) : buildCardResultsBlock(reading);
 }
 
 /** 產生單一系統的完整 Prompt */

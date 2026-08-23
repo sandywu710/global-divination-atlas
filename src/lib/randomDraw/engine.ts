@@ -13,8 +13,13 @@
 import { getDeckById } from "@/data/decks";
 import type { RandomDrawConfig, ReadingResult } from "@/types/randomDraw";
 import { drawCards, DrawConfigError } from "./cardEngine";
+import { castHexagram, defaultCoinTossConfig, HexagramLookupError, toReadingResult } from "./ichingEngine";
+import type { CoinTossHexagramConfig } from "@/types/randomDraw";
 
-export { DrawConfigError };
+export { DrawConfigError, HexagramLookupError };
+// I Ching 的起卦跟卡牌抽取機制完全不同（見 ichingEngine.ts 開頭的說明），
+// 這裡只是把它一起 re-export 出去，讓 UI 元件只需要從 engine.ts 這一個地方 import。
+export { castHexagram, defaultCoinTossConfig, toReadingResult };
 
 const CARD_METHODS = new Set([
   "tarot-card-draw",
@@ -45,5 +50,13 @@ export function runRandomDraw(config: RandomDrawConfig, spreadId: string): Readi
     return drawCards(deck, spread, config);
   }
 
-  throw new DrawConfigError(`randomizationMethod「${config.randomizationMethod}」尚未支援（例如 I Ching 屬於後續 Phase）。`);
+  throw new DrawConfigError(`randomizationMethod「${config.randomizationMethod}」不是卡牌類方法，請改用 runCoinTossHexagram() 或後續 Phase 才會支援的方法。`);
+}
+
+/**
+ * I Ching 專用入口：一次擲完 6 爻並回傳跟卡牌類共用的 ReadingResult 形狀。
+ * UI 如果要逐爻互動（每次點擊才擲一次），改用 ichingEngine.ts 的 tossLine()／resolveHexagram()。
+ */
+export function runCoinTossHexagram(config: CoinTossHexagramConfig): ReadingResult {
+  return toReadingResult(castHexagram(config));
 }

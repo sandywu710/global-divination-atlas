@@ -100,12 +100,20 @@ export const systems: DivinationSystem[] = [
     spiritualClaimLevel: "traditional",
     promptLanguage: "English",
     methodologySummary:
-      "The user first performs (or the AI simulates and clearly labels) a random casting method (coins or yarrow stalks) to obtain a hexagram, possibly with changing lines. Interpret using the hexagram's judgment (卦辭) and line texts (爻辭) as symbolic guidance for the specific question asked.",
+      "The user casts a hexagram through the application's own random draw mechanism, using the traditional 3-coin method (6 tosses, bottom to top; heads=3, tails=2; a sum of 6/9 is a changing line). This produces a primary hexagram and, if any lines are changing, a resulting hexagram. Interpret using the hexagram's judgment (卦辭) and line texts (爻辭) as symbolic guidance for the specific question asked, paying particular attention to any changing lines.",
     limitations:
       "易經回應的是「此刻的象徵指引」，而不是具體事件的精確預言；卦象的解讀高度仰賴上下文，同一卦對不同問題可能有截然不同的意義。",
     relatedSystems: ["liuyao", "meihua"],
     promptTemplate:
-      "If simulating the coin/yarrow casting yourself, clearly label the result as 'AI-simulated random draw, not a physical casting' before interpreting it.",
+      "The hexagram (and resulting hexagram, if any lines are changing) listed below was already cast by the user through the application's own coin-toss mechanism before this prompt was written — treat it as fixed, real input, not as something to simulate or recalculate.",
+    // ── Random Draw 設定：三枚銅板法起卦，跟 Tarot/Lenormand/Runes 的卡牌抽取機制完全不同 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "coin-toss-hexagram",
+      headsValue: 3,
+      tailsValue: 2,
+    },
   },
   {
     id: "liuyao",
