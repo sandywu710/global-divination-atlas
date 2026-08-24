@@ -99,8 +99,20 @@ export interface ObjectTossConfig {
   unmarkedFaceLabel: string;
 }
 
-/** DivinationSystem.randomDraw 可能是卡牌類設定、I Ching 的銅板法設定，或拋擲類設定 */
-export type AnyRandomDrawConfig = RandomDrawConfig | CoinTossHexagramConfig | ObjectTossConfig;
+/**
+ * 點陣類專用設定：非洲土占／西方土占共用。傳統做法是隨機產生 4 組「點陣」
+ * （Mother 圖形，各由 4 條線組成，每條線是單點或雙點），再用固定規則機械式地
+ * 推算出完整的 15 個圖形（Mothers／Daughters／Nieces／Witnesses／Judge）——
+ * 後面這步完全是計算，不需要額外的隨機性，跟 I Ching 從變爻推出之卦是同一種
+ * 「先隨機、再機械推算」的邏輯。沒有系統之間會不同的參數（兩個系統的圖形推算
+ * 規則完全相同，差異只在 Prompt 文字怎麼引導 AI 解讀），所以這裡只是一個標記型別。
+ */
+export interface GeomancyConfig {
+  randomizationMethod: "geomantic-generation";
+}
+
+/** DivinationSystem.randomDraw 可能是卡牌類設定、I Ching 的銅板法設定、拋擲類設定，或點陣類設定 */
+export type AnyRandomDrawConfig = RandomDrawConfig | CoinTossHexagramConfig | ObjectTossConfig | GeomancyConfig;
 
 /** 單一張牌／符文的抽取結果；I Ching 則用它來表示「單一爻」的起卦結果 */
 export interface DrawResult {

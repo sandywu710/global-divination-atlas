@@ -25,10 +25,14 @@ type Stage = "select" | "revealing" | "done";
 // question，這裡的 question 只用來顯示，維持「隨機屬於應用程式」的原則。
 export default function DrawInterface({ system, question, onComplete, onReset }: DrawInterfaceProps) {
   // 這個元件只給卡牌類系統用（PromptGenerator 已經依 randomizationMethod 分流），
-  // 這裡窄化型別把 CoinTossHexagramConfig／ObjectTossConfig 排除掉，避免誤用到不存在的 deckId/spreads 欄位
+  // 這裡窄化型別把 CoinTossHexagramConfig／ObjectTossConfig／GeomancyConfig 排除掉，
+  // 避免誤用到不存在的 deckId/spreads 欄位
   const drawConfig = system.randomDraw;
   const config: RandomDrawConfig | undefined =
-    drawConfig && drawConfig.randomizationMethod !== "coin-toss-hexagram" && drawConfig.randomizationMethod !== "object-toss"
+    drawConfig &&
+    drawConfig.randomizationMethod !== "coin-toss-hexagram" &&
+    drawConfig.randomizationMethod !== "object-toss" &&
+    drawConfig.randomizationMethod !== "geomantic-generation"
       ? drawConfig
       : undefined;
   const [stage, setStage] = useState<Stage>("select");

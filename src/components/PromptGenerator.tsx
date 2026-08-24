@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import DrawInterface from "@/components/draw/DrawInterface";
+import GeomancyInterface from "@/components/draw/GeomancyInterface";
 import IChingCastInterface from "@/components/draw/IChingCastInterface";
 import TossInterface from "@/components/draw/TossInterface";
 import { toLiuYaoReadingResult } from "@/lib/randomDraw/liuyaoEngine";
@@ -109,6 +110,17 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
         if (method === "object-toss") {
           return (
             <TossInterface
+              key={s.id}
+              system={s}
+              question={question}
+              onComplete={(result) => handleDrawComplete(s.id, result)}
+              onReset={() => handleDrawReset(s.id)}
+            />
+          );
+        }
+        if (method === "geomantic-generation") {
+          return (
+            <GeomancyInterface
               key={s.id}
               system={s}
               question={question}
