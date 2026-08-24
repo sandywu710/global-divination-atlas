@@ -5,7 +5,7 @@
 // 文字內容（警語、模式說明等）放在 src/data/promptTemplate.ts，
 // 這裡只負責「怎麼組合」的邏輯。
 // ────────────────────────────────────────────────────────────
-import { drawResultRules, modeInstructions, responseStructure, spiritualClaimWarning, universalRules } from "@/data/promptTemplate";
+import { drawResultRules, modeInstructions, responseLanguageInstruction, responseStructure, spiritualClaimWarning, universalRules } from "@/data/promptTemplate";
 import type { DivinationSystem, PromptMode, UserProfile } from "@/types/divination";
 import type { ReadingResult } from "@/types/randomDraw";
 
@@ -127,7 +127,9 @@ ${question || "[User has not entered a specific question — provide a general r
 Please structure your response as:
 ${structure}
 
-Stay faithful to the traditional framework of ${system.name} throughout your response.`;
+Stay faithful to the traditional framework of ${system.name} throughout your response.
+
+${responseLanguageInstruction}`;
 }
 
 /** 多系統比較用的 Prompt（Nice to Have 功能） */
