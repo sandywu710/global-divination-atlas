@@ -8,9 +8,13 @@
 //   - 調整某系統適合的問題類型 → 改 whatItCanExplore / idealQuestions
 // 都不需要碰任何 .tsx 元件或邏輯程式碼。
 // ────────────────────────────────────────────────────────────
+import { cartomancyDeck, cartomancySpreads } from "@/data/decks/cartomancy";
 import { lenormandDeck, lenormandSpreads } from "@/data/decks/lenormand";
+import { marseilleTarotDeck, marseilleTarotSpreads } from "@/data/decks/marseilleTarot";
+import { oghamDeck, oghamSpreads } from "@/data/decks/ogham";
 import { riderWaiteTarotDeck, tarotSpreads } from "@/data/decks/riderWaiteTarot";
 import { runesDeck, runeSpreads } from "@/data/decks/runes";
+import { thothTarotDeck, thothTarotSpreads } from "@/data/decks/thothTarot";
 import type { DivinationSystem } from "@/types/divination";
 
 export const systems: DivinationSystem[] = [
@@ -774,6 +778,18 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["rider-waite-tarot", "thoth-tarot"],
     promptTemplate:
       "Do not use Rider-Waite-Smith Minor Arcana imagery-based meanings — interpret Marseille Minor Arcana strictly through suit/number symbolism per Marseille tradition.",
+    // ── Random Draw 設定：完全沿用萊德偉特塔羅的引擎與 UI，只是換一份牌組資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "tarot-card-draw",
+      deckId: marseilleTarotDeck.id,
+      drawCounts: [1, 3],
+      spreads: marseilleTarotSpreads,
+      allowRepeats: false,
+      supportsReversed: true,
+      reversedProbability: 0.5,
+    },
   },
   {
     id: "thoth-tarot",
@@ -804,6 +820,18 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["rider-waite-tarot", "kabbalistic-numerology"],
     promptTemplate:
       "Interpret through Thoth-specific symbolism (Kabbalistic and astrological attributions as Crowley designed them) rather than defaulting to Rider-Waite-Smith card meanings.",
+    // ── Random Draw 設定：完全沿用萊德偉特塔羅的引擎與 UI，只是換一份牌組資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "tarot-card-draw",
+      deckId: thothTarotDeck.id,
+      drawCounts: [1, 3],
+      spreads: thothTarotSpreads,
+      allowRepeats: false,
+      supportsReversed: true,
+      reversedProbability: 0.5,
+    },
   },
   {
     id: "lenormand",
@@ -875,6 +903,17 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["lenormand", "rider-waite-tarot"],
     promptTemplate:
       "Use standard 52-card playing-card divinatory meanings (not Tarot meanings) even for cards that share a name with Tarot suits.",
+    // ── Random Draw 設定：完全沿用萊德偉特塔羅的引擎與 UI，只是換一份牌組資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "cartomancy-draw",
+      deckId: cartomancyDeck.id,
+      drawCounts: [1, 3],
+      spreads: cartomancySpreads,
+      allowRepeats: false,
+      supportsReversed: false, // 傳統歐洲民俗撲克牌占卜習慣上不看逆位
+    },
   },
 
   // ───────────── 歐洲／西方神秘學 ─────────────
@@ -949,6 +988,17 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["runes"],
     promptTemplate:
       "Note that much of modern Ogham divinatory interpretation is a later reconstruction, since original Celtic source material on its divinatory use is limited.",
+    // ── Random Draw 設定：完全沿用盧恩符文的引擎與 UI，只是換一份符號資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "rune-draw",
+      deckId: oghamDeck.id,
+      drawCounts: [1, 3],
+      spreads: oghamSpreads,
+      allowRepeats: false,
+      supportsReversed: false, // Ogham 傳統上沒有明確的正逆位判讀慣例
+    },
   },
   {
     id: "western-geomancy",
