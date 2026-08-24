@@ -8,9 +8,13 @@
 //   - 調整某系統適合的問題類型 → 改 whatItCanExplore / idealQuestions
 // 都不需要碰任何 .tsx 元件或邏輯程式碼。
 // ────────────────────────────────────────────────────────────
+import { cartomancyDeck, cartomancySpreads } from "@/data/decks/cartomancy";
 import { lenormandDeck, lenormandSpreads } from "@/data/decks/lenormand";
+import { marseilleTarotDeck, marseilleTarotSpreads } from "@/data/decks/marseilleTarot";
+import { oghamDeck, oghamSpreads } from "@/data/decks/ogham";
 import { riderWaiteTarotDeck, tarotSpreads } from "@/data/decks/riderWaiteTarot";
 import { runesDeck, runeSpreads } from "@/data/decks/runes";
+import { thothTarotDeck, thothTarotSpreads } from "@/data/decks/thothTarot";
 import type { DivinationSystem } from "@/types/divination";
 
 export const systems: DivinationSystem[] = [
@@ -143,7 +147,16 @@ export const systems: DivinationSystem[] = [
       "六爻對起卦時間與方法要求嚴謹，且判斷邏輯相當技術性；用於單一具體問題效果最好，不適合用來看整體人生格局。",
     relatedSystems: ["iching", "meihua", "qimen"],
     promptTemplate:
-      "Identify the 用神 (Useful God) relevant to the specific question before attempting any judgment about the outcome.",
+      "Identify the 用神 (Useful God) relevant to the specific question before attempting any judgment about the outcome — the Six Relative labels already assigned to each line below tell you which lines are candidates.",
+    // ── Random Draw 設定：跟易經共用同一套三枚銅板起卦引擎（headsValue/tailsValue 相同），
+    // 只有起卦完成後「多附加天干地支／六親標註」這一層是六爻獨有的（見 liuyaoEngine.ts） ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "coin-toss-hexagram",
+      headsValue: 3,
+      tailsValue: 2,
+    },
   },
   {
     id: "meihua",
@@ -187,7 +200,7 @@ export const systems: DivinationSystem[] = [
       "被稱為中國三大秘術之一，以特定時間排出九宮盤局，結合天干、八門、九星、八神來分析策略、時機與方位，常用於商業決策、談判時機與行動策略規劃。",
     whatItCanExplore: ["Decision", "Timing", "Career", "Money", "Relationships"],
     idealQuestions: ["這個時間點適合開始這個計畫嗎？", "這場談判我該用什麼策略？", "往哪個方向發展比較有利？"],
-    requiredInformation: ["question", "specificEvent"],
+    requiredInformation: ["question", "specificEvent", "castMoment"],
     optionalInformation: ["currentLocation"],
     inputType: ["question", "birthData"],
     timeOrientation: ["present", "future"],
@@ -204,7 +217,7 @@ export const systems: DivinationSystem[] = [
       "排盤規則非常複雜，人工心算或 AI 直接排盤誤差風險高；建議先用專門排盤工具算出正確盤局，再交給 AI 做文字解讀，而非請 AI 自行起局。",
     relatedSystems: ["daliuren", "liuyao"],
     promptTemplate:
-      "State plainly that precise chart construction should ideally come from dedicated calculation tools, and that your interpretation assumes the chart data given is accurate.",
+      "State plainly that precise chart construction should ideally come from dedicated calculation tools, and that your interpretation assumes the chart data given is accurate. Use the 'Moment this question was asked' timestamp given below (auto-captured by the application, not entered by the user) as the exact moment to construct the chart for — do not ask the user for a different time.",
   },
   {
     id: "daliuren",
@@ -480,38 +493,6 @@ export const systems: DivinationSystem[] = [
     promptTemplate:
       "You must explicitly state at the very start of your response that this is a stylized, educational Nadi-astrology-inspired interpretation — NOT a claim to access real palm-leaf manuscripts, ancient records, or any supernatural source of information about the user's past.",
   },
-  {
-    id: "samudrika-shastra",
-    name: "Samudrika Shastra",
-    nativeNames: ["सामुद्रिक शास्त्र"],
-    region: ["India"],
-    culturalOrigin: "印度",
-    category: ["Indian Divination", "Symbolic"],
-    era: "古印度傳統相學經典",
-    description:
-      "印度傳統相學，透過面相、手相、身體特徵的象徵意義來解讀性格傾向與傳統認為的吉相特徵，是印度文化中歷史悠久的身體象徵解讀系統。",
-    whatItCanExplore: ["Personality", "Health Symbolism"],
-    idealQuestions: ["我的面相／手相在傳統上代表什麼樣的性格？", "傳統相學怎麼解讀我的某項特徵？"],
-    requiredInformation: ["photo"],
-    optionalInformation: ["handPhoto"],
-    inputType: ["photo"],
-    timeOrientation: ["timeless"],
-    specificity: "symbolic-reflection",
-    aiSuitability: 2,
-    requiresCalculation: false,
-    requiresRandomization: false,
-    requiresImage: true,
-    spiritualClaimLevel: "traditional",
-    promptLanguage: "English",
-    methodologySummary:
-      "Interpret facial and palm features according to traditional Samudrika Shastra symbolic categories (e.g. specific lines, proportions, marks) as culturally-inherited symbolic associations with personality and traditionally-considered auspiciousness.",
-    limitations:
-      "這是象徵性的傳統文化解讀，不是醫學或科學上對身體特徵的判斷；AI 對照片的判讀能力有限，細節解讀應保守。",
-    relatedSystems: [],
-    promptTemplate:
-      "If no photo is actually provided, do not fabricate a description of facial/palm features — ask for one or explain the framework in general terms instead.",
-  },
-
   // ───────────── 西方系統 ─────────────
   {
     id: "western-astrology",
@@ -585,7 +566,7 @@ export const systems: DivinationSystem[] = [
       "不看出生盤，而是以「提問當下的時間與地點」起盤，針對一個具體、明確的問題（例如「這件事會不會成功？」）給出判斷，是占星學中最直接回應具體問題的分支。",
     whatItCanExplore: ["Specific Event", "Decision"],
     idealQuestions: ["我弄丟的東西找得回來嗎？", "這次面試結果會如何？", "我現在該不該答應這個邀約？"],
-    requiredInformation: ["question", "specificEvent"],
+    requiredInformation: ["question", "specificEvent", "castMoment"],
     inputType: ["question"],
     timeOrientation: ["present", "future"],
     specificity: "single-event",
@@ -601,7 +582,7 @@ export const systems: DivinationSystem[] = [
       "需要提問當下「精確」的時間與地點；一個問題只能問一次，重複起卦會降低判讀的可靠性（依古典規則）。",
     relatedSystems: ["hellenistic-astrology", "kp-astrology"],
     promptTemplate:
-      "Ask for the exact time and location the question was formulated, since horary charts are cast for that moment — not the user's birth data.",
+      "Use the 'Moment this question was asked' timestamp given below (auto-captured by the application, not entered by the user) as the exact moment to cast the horary chart for — do not ask the user for a different time. Location was not collected for this reading; if location materially affects the chart, state that assumption explicitly rather than guessing a location.",
   },
   {
     id: "electional-astrology",
@@ -615,7 +596,7 @@ export const systems: DivinationSystem[] = [
       "用來挑選「開始做某件事」的最佳時機，例如創業、發表產品、搬家、簽約、結婚等，透過分析候選時間點的星象組合，找出對這件事最有利的時間窗口。",
     whatItCanExplore: ["Timing", "Decision", "Career", "Money"],
     idealQuestions: ["我該選哪一天開幕比較好？", "這幾個候選日期哪一個對簽約比較有利？", "什麼時候是搬家的好時機？"],
-    requiredInformation: ["question", "specificEvent"],
+    requiredInformation: ["question", "specificEvent", "candidateMoments"],
     optionalInformation: ["currentLocation"],
     inputType: ["question"],
     timeOrientation: ["future"],
@@ -632,7 +613,7 @@ export const systems: DivinationSystem[] = [
       "需要使用者提供具體的候選時間範圍與地點；擇日占星是「趨吉避凶的參考」，不是保證成功的方法。",
     relatedSystems: ["horary-astrology", "western-astrology"],
     promptTemplate:
-      "If specific candidate dates/times are not given, ask for a range rather than inventing arbitrary dates to evaluate.",
+      "The candidate date/time options listed below were entered by the user through the application — evaluate exactly those options rather than inventing additional dates to compare.",
   },
   {
     id: "synastry-astrology",
@@ -797,6 +778,18 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["rider-waite-tarot", "thoth-tarot"],
     promptTemplate:
       "Do not use Rider-Waite-Smith Minor Arcana imagery-based meanings — interpret Marseille Minor Arcana strictly through suit/number symbolism per Marseille tradition.",
+    // ── Random Draw 設定：完全沿用萊德偉特塔羅的引擎與 UI，只是換一份牌組資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "tarot-card-draw",
+      deckId: marseilleTarotDeck.id,
+      drawCounts: [1, 3],
+      spreads: marseilleTarotSpreads,
+      allowRepeats: false,
+      supportsReversed: true,
+      reversedProbability: 0.5,
+    },
   },
   {
     id: "thoth-tarot",
@@ -827,6 +820,18 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["rider-waite-tarot", "kabbalistic-numerology"],
     promptTemplate:
       "Interpret through Thoth-specific symbolism (Kabbalistic and astrological attributions as Crowley designed them) rather than defaulting to Rider-Waite-Smith card meanings.",
+    // ── Random Draw 設定：完全沿用萊德偉特塔羅的引擎與 UI，只是換一份牌組資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "tarot-card-draw",
+      deckId: thothTarotDeck.id,
+      drawCounts: [1, 3],
+      spreads: thothTarotSpreads,
+      allowRepeats: false,
+      supportsReversed: true,
+      reversedProbability: 0.5,
+    },
   },
   {
     id: "lenormand",
@@ -898,6 +903,17 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["lenormand", "rider-waite-tarot"],
     promptTemplate:
       "Use standard 52-card playing-card divinatory meanings (not Tarot meanings) even for cards that share a name with Tarot suits.",
+    // ── Random Draw 設定：完全沿用萊德偉特塔羅的引擎與 UI，只是換一份牌組資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "cartomancy-draw",
+      deckId: cartomancyDeck.id,
+      drawCounts: [1, 3],
+      spreads: cartomancySpreads,
+      allowRepeats: false,
+      supportsReversed: false, // 傳統歐洲民俗撲克牌占卜習慣上不看逆位
+    },
   },
 
   // ───────────── 歐洲／西方神秘學 ─────────────
@@ -972,6 +988,17 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["runes"],
     promptTemplate:
       "Note that much of modern Ogham divinatory interpretation is a later reconstruction, since original Celtic source material on its divinatory use is limited.",
+    // ── Random Draw 設定：完全沿用盧恩符文的引擎與 UI，只是換一份符號資料 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "rune-draw",
+      deckId: oghamDeck.id,
+      drawCounts: [1, 3],
+      spreads: oghamSpreads,
+      allowRepeats: false,
+      supportsReversed: false, // Ogham 傳統上沒有明確的正逆位判讀慣例
+    },
   },
   {
     id: "western-geomancy",
@@ -996,42 +1023,19 @@ export const systems: DivinationSystem[] = [
     spiritualClaimLevel: "traditional",
     promptLanguage: "English",
     methodologySummary:
-      "Generate four random lines of points (or a simulated equivalent), reduce them into a Mother figure, derive Daughters, Nieces, Witnesses, and the Judge according to classical geomantic rules, and interpret the outcome via house placement.",
+      "Four random Mother figures (each 4 lines of single/double points) were generated through the application's own random mechanism, then mechanically reduced into Daughters, Nieces, Witnesses, and the Judge according to classical geomantic addition rules. Identify each figure's traditional name from its point pattern, then interpret the outcome via house placement.",
     limitations:
-      "完整的推演規則（Mother/Daughter/Niece/Witness/Judge）相當技術性，AI 模擬亂數產生過程須清楚標示是模擬而非真實戳點。",
+      "完整的推演規則（Mother/Daughter/Niece/Witness/Judge）相當技術性；圖形本身由應用程式真實隨機產生，但每個圖形的傳統拉丁文名稱由 AI 自行對照判斷，仍可能因參考資料差異而有出入。",
     relatedSystems: ["african-geomancy"],
     promptTemplate:
-      "If simulating the random point generation yourself, clearly label it as an AI-simulated equivalent of physical geomantic point-marking, not an authentic physical casting.",
-  },
-  {
-    id: "bibliomancy",
-    name: "Bibliomancy",
-    nativeNames: ["書占"],
-    region: ["Europe", "Middle East", "Americas"],
-    culturalOrigin: "跨文化，多個文明皆有類似傳統",
-    category: ["Western Esotericism", "Symbolic"],
-    era: "跨文化、歷史悠久",
-    description:
-      "隨機翻開一本書（傳統上常用聖經、詩集或個人重視的書籍）並隨機指出一段文字，將這段文字視為對當下問題的象徵性回應，是相當古老且跨文化的占卜方式。",
-    whatItCanExplore: ["Inner World", "Spiritual Growth", "Decision"],
-    idealQuestions: ["這段文字對我目前的處境有什麼指引？", "我該用什麼角度看待這個狀況？"],
-    requiredInformation: ["question", "randomSelection"],
-    inputType: ["question", "randomDraw", "textSelection"],
-    timeOrientation: ["present", "timeless"],
-    specificity: "symbolic-reflection",
-    aiSuitability: 3,
-    requiresCalculation: false,
-    requiresRandomization: true,
-    requiresImage: false,
-    spiritualClaimLevel: "symbolic",
-    promptLanguage: "English",
-    methodologySummary:
-      "Two distinct steps: (1) a random passage is selected from a chosen text (by the user physically, or a random selection method); (2) the AI interprets that specific passage symbolically in relation to the question — these two steps must stay clearly separated.",
-    limitations:
-      "解讀高度主觀，仰賴使用者自己選定的文本與段落；這是反思工具而非預測方法，重點在啟發聯想而非給出明確答案。",
-    relatedSystems: [],
-    promptTemplate:
-      "Keep the two steps explicit and separate in your response: first state which passage was selected (or ask the user to provide it), then interpret it — do not skip straight to interpretation without naming the passage.",
+      "The 15-figure chart listed below was already generated by the user through the application's own random mechanism before this prompt was written — treat it as fixed, real input, not as something to simulate or regenerate.",
+    // ── Random Draw 設定：跟非洲土占共用同一套點陣推算引擎，圖形本身完全相同，
+    // 差異只在這裡的 promptTemplate 引導 AI 用哪個地區／流派的傳統框架解讀 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "geomantic-generation",
+    },
   },
   {
     id: "scrying",
@@ -1059,39 +1063,9 @@ export const systems: DivinationSystem[] = [
       "Take the user's description of the images/impressions they perceived while scrying and interpret them symbolically, using dream-symbolism and archetypal frameworks — as a structured reflection on the user's own subconscious impressions, not as literal supernatural viewing.",
     limitations:
       "重要：AI 無法真的透過水晶球或鏡面「看見」任何畫面，也沒有超自然視覺能力；這個系統的本質是引導使用者描述自己的主觀印象，再協助做象徵性解讀。",
-    relatedSystems: ["tasseography", "dream-divination"],
+    relatedSystems: ["dream-divination"],
     promptTemplate:
       "You must not claim to actually perceive or see anything through scrying. Only interpret the imagery the user themselves describes having perceived, framed clearly as their own subconscious impression.",
-  },
-  {
-    id: "tasseography",
-    name: "Tasseography",
-    nativeNames: ["茶葉占卜"],
-    region: ["Europe", "Middle East"],
-    culturalOrigin: "歐洲與中東民間傳統",
-    category: ["Symbolic", "Western Esotericism"],
-    era: "約 17 世紀歐洲民間發展",
-    description:
-      "觀察喝完茶後杯底殘留茶葉（或咖啡渣）形成的形狀，將形狀對應到象徵意義，來對關係、當下狀況與未來提供象徵性的反思，是相當生活化、民俗風味濃厚的占卜方式。",
-    whatItCanExplore: ["Relationships", "Future Trends", "Inner World"],
-    idealQuestions: ["杯底的形狀可能代表什麼象徵意義？", "這個圖案反映出什麼樣的訊息？"],
-    requiredInformation: ["photo"],
-    inputType: ["photo"],
-    timeOrientation: ["present", "future"],
-    specificity: "symbolic-reflection",
-    aiSuitability: 2,
-    requiresCalculation: false,
-    requiresRandomization: false,
-    requiresImage: true,
-    spiritualClaimLevel: "symbolic",
-    promptLanguage: "English",
-    methodologySummary:
-      "Interpret the shapes described or shown (via photo) in the tea leaf/coffee ground residue using traditional tasseography symbol dictionaries (e.g. a ring shape, a bird shape) as symbolic prompts for reflection.",
-    limitations:
-      "從照片辨識具體形狀的準確度有限，解讀高度主觀；建議把這個系統當作「圖像聯想的反思遊戲」，而非精確的預測工具。",
-    relatedSystems: ["scrying"],
-    promptTemplate:
-      "If no photo/description of the actual shapes is provided, do not invent shapes — ask the user to describe what they see instead.",
   },
 
   // ───────────── 數字學 ─────────────
@@ -1247,6 +1221,16 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["cowrie-shell"],
     promptTemplate:
       "You must explicitly state that you are not a consecrated Babalawo and cannot perform an authentic Ifá consultation or communicate with Orisha. Offer only an educational, literature-based conceptual reflection, and recommend consulting an actual Ifá priest for genuine practice.",
+    // ── Random Draw 設定：拋擲類共用引擎，這裡用 8 片（呼應傳統 Opele 占卜鏈的 8 片結構） ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "object-toss",
+      objectCount: 8,
+      objectLabel: "Opele chain piece",
+      markedFaceLabel: "Concave face up (marked)",
+      unmarkedFaceLabel: "Convex face up (unmarked)",
+    },
   },
   {
     id: "cowrie-shell",
@@ -1277,6 +1261,16 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["ifa", "bone-divination"],
     promptTemplate:
       "Note that specific cowrie divination rules vary between West African traditions/ethnic groups, and that this is a general, non-ritual educational interpretation.",
+    // ── Random Draw 設定：拋擲類共用引擎，16 枚呼應「Merindinlogun（十六貝殼）」傳統 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "object-toss",
+      objectCount: 16,
+      objectLabel: "cowrie shell",
+      markedFaceLabel: "Mouth-up (aperture visible)",
+      unmarkedFaceLabel: "Mouth-down (back visible)",
+    },
   },
   {
     id: "african-geomancy",
@@ -1301,12 +1295,19 @@ export const systems: DivinationSystem[] = [
     spiritualClaimLevel: "traditional",
     promptLanguage: "English",
     methodologySummary:
-      "Generate randomized point patterns (or use a simulated equivalent) to derive symbolic figures according to the specific regional tradition (e.g. Sikidy), then interpret the resulting pattern's traditional meaning for the question asked.",
+      "Four random Mother figures (each 4 lines of single/double points) were generated through the application's own random mechanism, then mechanically reduced into Daughters, Nieces, Witnesses, and the Judge according to classical geomantic addition rules. Identify each figure's traditional name and interpret the resulting pattern's meaning according to the specific regional tradition (e.g. Sikidy) for the question asked.",
     limitations:
-      "不同地區的規則差異頗大（例如 Sikidy 與北非土占邏輯不完全相同），解讀時應標明依循哪一個地區傳統。",
+      "不同地區的規則差異頗大（例如 Sikidy 與北非土占邏輯不完全相同），解讀時應標明依循哪一個地區傳統；圖形本身由應用程式真實隨機產生，但傳統名稱與地區判讀規則仍交由 AI 判斷。",
     relatedSystems: ["western-geomancy"],
     promptTemplate:
-      "State clearly which specific regional African geomancy tradition (e.g. Malagasy Sikidy) the interpretation follows, since methods vary significantly by region.",
+      "State clearly which specific regional African geomancy tradition (e.g. Malagasy Sikidy) the interpretation follows, since methods vary significantly by region. The 15-figure chart listed below was already generated by the user through the application's own random mechanism before this prompt was written — treat it as fixed, real input, not as something to simulate or regenerate.",
+    // ── Random Draw 設定：跟西方土占共用同一套點陣推算引擎，圖形本身完全相同，
+    // 差異只在這裡的 promptTemplate 引導 AI 用哪個地區／流派的傳統框架解讀 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "geomantic-generation",
+    },
   },
   {
     id: "bone-divination",
@@ -1336,7 +1337,18 @@ export const systems: DivinationSystem[] = [
       "傳統上這通常由具備特定身份與訓練的占卜師（如 Sangoma）執行，AI 提供的只能是概括性的教育介紹，不能取代真正的傳統儀式諮詢。",
     relatedSystems: ["cowrie-shell"],
     promptTemplate:
-      "Clarify that authentic bone divination is traditionally performed by trained practitioners (e.g. Sangoma) within a specific cultural/spiritual context, and this is only a general educational reflection.",
+      "Clarify that authentic bone divination is traditionally performed by trained practitioners (e.g. Sangoma) within a specific cultural/spiritual context, and this is only a general educational reflection. The objects listed below were already tossed by the user through the application's own random mechanism — do not treat this as a substitute for a real practitioner's spatial reading of a physical throw.",
+    // ── Random Draw 設定：拋擲類共用引擎。真實骨占的物件組成因占卜師而異，
+    // 這裡用 6 個具代表性的物件數量做「簡化的數位版本」，Prompt 裡會誠實標明這一點 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "object-toss",
+      objectCount: 6,
+      objectLabel: "bone/shell piece",
+      markedFaceLabel: "Marked face up",
+      unmarkedFaceLabel: "Unmarked face up",
+    },
   },
 
   // ───────────── 現代靈性系統 ─────────────

@@ -82,7 +82,12 @@ export type RequiredInformation =
   | "context"
   | "specificEvent"
   | "name"
-  | "fullName";
+  | "fullName"
+  /** 起局／提問當下的精確時間（例如奇門遁甲、卜卦占星），由應用程式在使用者按下
+   *  「產生 Prompt」的當下自動帶入，不需要使用者自己輸入 */
+  | "castMoment"
+  /** 候選時段清單（例如擇日占星），使用者可以新增多筆候選日期／時間 */
+  | "candidateMoments";
 
 /** 這個系統看的時間軸方向 */
 export type TimeOrientation = "past" | "present" | "future" | "timeless" | "lifeCycle";
@@ -184,6 +189,14 @@ export interface UserProfile {
   currentLocation?: string;
   gender?: string;
   relationshipStatus?: string;
+}
+
+/** 合盤占星這類系統需要的「對方」出生資料，跟 UserProfile 分開存、分開一份表單，
+ *  只保留合盤真正用得到的欄位（不需要姓名／性別／感情狀態等） */
+export interface OtherPersonProfile {
+  birthDate?: string;
+  birthTime?: string;
+  birthPlace?: string;
 }
 
 /** Prompt 品質模式 */

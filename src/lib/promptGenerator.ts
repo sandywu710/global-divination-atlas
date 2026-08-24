@@ -6,7 +6,7 @@
 // 這裡只負責「怎麼組合」的邏輯。
 // ────────────────────────────────────────────────────────────
 import { drawResultRules, modeInstructions, responseLanguageInstruction, responseStructure, spiritualClaimWarning, universalRules } from "@/data/promptTemplate";
-import type { DivinationSystem, PromptMode, UserProfile } from "@/types/divination";
+import type { DivinationSystem, OtherPersonProfile, PromptMode, UserProfile } from "@/types/divination";
 import type { ReadingResult } from "@/types/randomDraw";
 
 export interface PromptBuildInput {
@@ -16,10 +16,31 @@ export interface PromptBuildInput {
   mode: PromptMode;
   /** 系統要求 requiresRandomDraw 為 true 時，使用者已經在網站上真正抽出的結果 */
   drawResult?: ReadingResult;
+  /** 系統的 requiredInformation 包含 dreamDescription 時（例如夢境占卜），使用者實際輸入的夢境內容 */
+  dreamDescription?: string;
+  /** 系統的 requiredInformation 包含 context 或 specificEvent 時（例如梅花易數、奇門遁甲），
+   *  使用者具體描述的事件來龍去脈 */
+  eventDescription?: string;
+  /** 系統的 requiredInformation 包含 castMoment 時（例如奇門遁甲、卜卦占星），使用者按下
+   *  「產生 Prompt」當下的系統時間（ISO 字串），由元件自動帶入，不需要使用者自己輸入 */
+  castMoment?: string;
+  /** 系統的 requiredInformation 包含 candidateMoments 時（擇日占星），使用者輸入的候選時段清單 */
+  candidateMoments?: string[];
+  /** 系統的 requiredInformation 包含 otherPersonBirthData 時（合盤占星），另一個人的出生資料 */
+  otherPersonProfile?: OtherPersonProfile;
+}
+
+interface UserInfoBlockExtras {
+  dreamDescription?: string;
+  eventDescription?: string;
+  castMoment?: string;
+  candidateMoments?: string[];
+  otherPersonProfile?: OtherPersonProfile;
 }
 
 /** 依照系統需要的資料欄位，組出「使用者資訊」區塊；沒填的欄位標示為 [Not provided] */
-function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem): string {
+function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem, extras: UserInfoBlockExtras = {}): string {
+  const { dreamDescription, eventDescription, castMoment, candidateMoments, otherPersonProfile } = extras;
   const lines: string[] = [];
   const need = new Set([...system.requiredInformation, ...(system.optionalInformation ?? [])]);
 
@@ -34,10 +55,30 @@ function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem): str
   if (need.has("name") || need.has("fullName"))
     lines.push(`Name: ${profile.name || "[Not provided]"}`);
 
+  if (need.has("otherPersonBirthData") || need.has("partnerBirthData")) {
+    lines.push(`Other person — Birth date: ${otherPersonProfile?.birthDate || "[Not provided]"}`);
+    lines.push(`Other person — Birth time: ${otherPersonProfile?.birthTime || "[Not provided]"}`);
+    lines.push(`Other person — Birth place: ${otherPersonProfile?.birthPlace || "[Not provided]"}`);
+  }
+
   if (need.has("photo") || need.has("handPhoto"))
     lines.push("Photo: [User will attach a photo separately, if applicable]");
   if (need.has("dreamDescription"))
-    lines.push("Dream description: [User will describe their dream in detail below]");
+    lines.push(`Dream description: ${dreamDescription?.trim() ? dreamDescription.trim() : "[Not provided]"}`);
+  if (need.has("context") || need.has("specificEvent"))
+    lines.push(`Specific event / context: ${eventDescription?.trim() ? eventDescription.trim() : "[Not provided]"}`);
+  if (need.has("castMoment"))
+    lines.push(
+      `Moment this question was asked (local system time, auto-captured by the application when the user generated this prompt — not entered manually): ${castMoment || "[Not captured]"}`
+    );
+  if (need.has("candidateMoments")) {
+    const trimmed = (candidateMoments ?? []).map((m) => m.trim()).filter(Boolean);
+    lines.push(
+      trimmed.length > 0
+        ? `Candidate date/time options to compare (choose the most favorable one):\n${trimmed.map((m, i) => `  ${i + 1}. ${m}`).join("\n")}`
+        : "Candidate date/time options to compare: [Not provided]"
+    );
+  }
   // requiresRandomDraw 的系統，抽牌結果一律走下面 buildDrawResultsBlock() 那個獨立區塊，
   // 不會、也不應該叫外部 AI「自己模擬抽牌」——這裡刻意跳過舊版的模擬提示文字。
   if (!system.requiresRandomDraw && (need.has("randomSelection") || need.has("cards") || need.has("dice")))
@@ -87,21 +128,108 @@ IMPORTANT — READ CAREFULLY:
 ${rules}`;
 }
 
-/** 把使用者在網站上實際抽到／起卦的結果，組成 AI 只能解讀、不能重新抽／重新起卦的區塊。
- *  卡牌類跟 I Ching 的資料形狀不同，所以格式邏輯分開處理，但規則（IMPORTANT — READ CAREFULLY）共用。 */
-function buildDrawResultsBlock(reading: ReadingResult): string {
+/** 六爻專用格式：跟易經的本卦／之卦格式相同（同一套三枚銅板起卦引擎），
+ *  但每一爻多列出天干地支（納甲）與六親標註（由 liuyaoEngine.ts 算好），
+ *  並且明確指示 AI 依照已經標好的六親、加上起卦日期，自己排六神、判斷用神。
+ *  這個函式不會被易經呼叫，buildHexagramResultsBlock() 完全不受影響。 */
+function buildLiuYaoResultsBlock(reading: ReadingResult): string {
+  const lineDetail = reading.results
+    .map((r, i) => `${i + 1}. ${r.itemName} — Stem-Branch: ${r.stemBranch ?? "[missing]"} — Six Relative: ${r.sixRelative ?? "[missing]"}`)
+    .join("\n");
+  const changingLines = (reading.changingLineIndices ?? []).map((i) => i + 1);
+  const rules = drawResultRules.map((r) => `- ${r}`).join("\n");
+  const castDate = reading.drawnAt.slice(0, 10);
+
+  return `METHOD: 3-Coin Method (Liu Yao / 六爻), built on the same hexagram-casting mechanism as I Ching
+
+ACTUAL CAST RESULT (this hexagram was cast by the user through the application's own coin-toss mechanism — it is not hypothetical):
+Palace (宮): ${reading.palaceName ?? "[missing]"}
+Primary Hexagram: ${reading.hexagramName}
+Lines (bottom to top, with Stem-Branch and Six Relative already assigned by the application using standard Najia rules):
+${lineDetail}
+${changingLines.length > 0 ? `Changing lines: ${changingLines.join(", ")} (counting from the bottom)\nResulting Hexagram: ${reading.resultingHexagramName}` : "No changing lines — read the primary hexagram only."}
+Cast date: ${castDate}
+
+IMPORTANT — READ CAREFULLY:
+${rules}
+- The Stem-Branch and Six Relative label for each line above were already calculated by the application using standard Najia (納甲) rules — do NOT recalculate or reassign them.
+- Six Spirits (六神): using the cast date above, determine that day's Heavenly Stem via a reliable perpetual calendar, then assign the Six Spirits to the six lines bottom-to-top starting from Qing Long (青龍) if the day stem is Jia/Yi (甲/乙), Zhu Que (朱雀) if Bing/Ding (丙/丁), Gou Chen (勾陳) if Wu (戊), Teng She (螣蛇) if Ji (己), Bai Hu (白虎) if Geng/Xin (庚/辛), or Xuan Wu (玄武) if Ren/Gui (壬/癸) — then continuing upward in the fixed cycle Qing Long → Zhu Que → Gou Chen → Teng She → Bai Hu → Xuan Wu.
+- Useful God (用神): based on what the question below is actually about, decide which Six Relative category above is the Useful God for this specific question (e.g. money/spouse-related questions map to Spouse/Wealth 妻財, career/legal/authority matters to Officials/Spirits 官鬼, documents/elders/mother to Parents 父母, children/health/resolution to Offspring 子孫, siblings/peers/competitors to Siblings 兄弟) before making any judgment about the outcome.`;
+}
+
+/** 拋擲類（Ifá／貝殼占卜／骨占）格式：列出每個物件是正面還是反面朝上，
+ *  外加一個總計比例方便 AI 快速掌握整體格局，防呆規則跟其他 Random Draw 系統共用。 */
+function buildTossResultsBlock(reading: ReadingResult): string {
+  const resultLines = reading.results.map((r, i) => `${i + 1}. ${r.positionLabel} — ${r.itemName}`).join("\n");
+  const markedCount = reading.results.filter((r) => r.itemId === "marked").length;
+  const rules = drawResultRules.map((r) => `- ${r}`).join("\n");
+
+  return `METHOD: Object Toss${reading.deckName ? ` (${reading.deckName})` : ""}
+
+ACTUAL TOSS RESULT (these objects were tossed by the user through the application's own random mechanism — it is not hypothetical):
+${resultLines}
+Summary: ${markedCount} of ${reading.results.length} objects landed marked-side-up.
+
+IMPORTANT — READ CAREFULLY:
+${rules}`;
+}
+
+/** 點陣類（非洲土占／西方土占）格式：列出完整的 15 個圖形，並明確告訴 AI
+ *  這裡故意沒有附上每個圖形的傳統名稱，要 AI 自己用點陣模式（單點／雙點組合）
+ *  對照傳統名稱——這是解讀的一部分，不是應用程式該幫忙編造或猜測的隨機資料。 */
+function buildGeomancyResultsBlock(reading: ReadingResult): string {
+  const resultLines = reading.results.map((r) => `${r.positionLabel}: ${r.itemName} (top to bottom)`).join("\n");
+  const rules = drawResultRules.map((r) => `- ${r}`).join("\n");
+
+  return `METHOD: Geomantic Point Generation${reading.deckName ? ` (${reading.deckName})` : ""}
+
+ACTUAL CHART RESULT (the 4 Mother figures were randomly generated by the user through the application's own random mechanism, and the Daughters/Nieces/Witnesses/Judge were then mechanically derived from them using standard geomantic addition rules — none of this is hypothetical):
+${resultLines}
+
+IMPORTANT — READ CAREFULLY:
+${rules}
+- Each figure above is given only as its objective point pattern (• = single point, •• = double point, listed top to bottom) — the application deliberately did not attach a traditional figure name (e.g. Via, Populus, Fortuna Major...) to avoid guessing incorrectly. Identify each figure's traditional name yourself from its point pattern using your own reference knowledge of this tradition, and note explicitly if you are uncertain about any name.
+- Do NOT regenerate or alter the Mother figures, and do NOT recompute the Daughters/Nieces/Witnesses/Judge differently from what is given above.`;
+}
+
+/** 把使用者在網站上實際抽到／起卦／拋擲／產生的結果，組成 AI 只能解讀、不能重新抽的區塊。
+ *  卡牌類、I Ching、六爻、拋擲類、點陣類的資料形狀不完全相同，所以格式邏輯分開處理，
+ *  但規則（IMPORTANT — READ CAREFULLY）共用。六爻雖然跟 I Ching 共用同一套起卦引擎
+ *  （method 都是 "coin-toss-hexagram"），但要多印出天干地支／六親，所以用 system.id 分流，
+ *  不影響易經本身固定走 buildHexagramResultsBlock()。 */
+function buildDrawResultsBlock(reading: ReadingResult, system: DivinationSystem): string {
+  if (system.id === "liuyao") return buildLiuYaoResultsBlock(reading);
+  if (reading.method === "object-toss") return buildTossResultsBlock(reading);
+  if (reading.method === "geomantic-generation") return buildGeomancyResultsBlock(reading);
   return reading.method === "coin-toss-hexagram" ? buildHexagramResultsBlock(reading) : buildCardResultsBlock(reading);
 }
 
 /** 產生單一系統的完整 Prompt */
-export function buildPrompt({ system, question, profile, mode, drawResult }: PromptBuildInput): string {
-  const userInfoBlock = buildUserInfoBlock(profile, system);
+export function buildPrompt({
+  system,
+  question,
+  profile,
+  mode,
+  drawResult,
+  dreamDescription,
+  eventDescription,
+  castMoment,
+  candidateMoments,
+  otherPersonProfile,
+}: PromptBuildInput): string {
+  const userInfoBlock = buildUserInfoBlock(profile, system, {
+    dreamDescription,
+    eventDescription,
+    castMoment,
+    candidateMoments,
+    otherPersonProfile,
+  });
   const rules = [...universalRules, spiritualClaimWarning[system.spiritualClaimLevel], system.promptTemplate]
     .filter(Boolean)
     .map((r) => `- ${r}`)
     .join("\n");
   const structure = responseStructure.map((s, i) => `${i + 1}. ${s}`).join("\n");
-  const drawResultsSection = drawResult ? `\n${buildDrawResultsBlock(drawResult)}\n` : "";
+  const drawResultsSection = drawResult ? `\n${buildDrawResultsBlock(drawResult, system)}\n` : "";
 
   return `You are an experienced practitioner and researcher of ${system.name}${
     system.nativeNames?.length ? ` (${system.nativeNames.join(" / ")})` : ""
@@ -132,16 +260,39 @@ Stay faithful to the traditional framework of ${system.name} throughout your res
 ${responseLanguageInstruction}`;
 }
 
+/** buildComparisonPrompt 除了 systems/question/profile 之外，其餘欄位都是可有可無的附加資料，
+ *  隨著支援的系統種類變多（夢境描述、具體事件、起局時間、候選時段、對方出生資料……），
+ *  改用一個物件裝起來，比一長串位置參數好維護、之後要再加欄位也不用改呼叫端的參數順序。 */
+export interface ComparisonPromptExtras {
+  drawResults?: Record<string, ReadingResult>;
+  dreamDescription?: string;
+  eventDescription?: string;
+  castMoment?: string;
+  candidateMoments?: string[];
+  otherPersonProfile?: OtherPersonProfile;
+}
+
 /** 多系統比較用的 Prompt（Nice to Have 功能） */
 export function buildComparisonPrompt(
   systems: DivinationSystem[],
   question: string,
   profile: UserProfile,
-  drawResults?: Record<string, ReadingResult>
+  extras: ComparisonPromptExtras = {}
 ): string {
   const sections = systems
     .map((system, i) => {
-      const body = buildPrompt({ system, question, profile, mode: "Standard", drawResult: drawResults?.[system.id] });
+      const body = buildPrompt({
+        system,
+        question,
+        profile,
+        mode: "Standard",
+        drawResult: extras.drawResults?.[system.id],
+        dreamDescription: extras.dreamDescription,
+        eventDescription: extras.eventDescription,
+        castMoment: extras.castMoment,
+        candidateMoments: extras.candidateMoments,
+        otherPersonProfile: extras.otherPersonProfile,
+      });
       return `--- SYSTEM ${i + 1}: ${system.name} ---\n${body}`;
     })
     .join("\n\n");

@@ -16,7 +16,7 @@ export const recommendationRules: Record<QuestionIntent, string[]> = {
   Love: ["synastry-astrology", "sukuyodo", "western-astrology", "lenormand", "rider-waite-tarot"],
   Marriage: ["ziwei", "vedic-astrology", "synastry-astrology", "koreansaju", "kp-astrology"],
   Compatibility: ["synastry-astrology", "sukuyodo", "vedic-astrology", "western-astrology"],
-  Relationship: ["synastry-astrology", "lenormand", "rider-waite-tarot", "sukuyodo", "tasseography"],
+  Relationship: ["synastry-astrology", "lenormand", "rider-waite-tarot", "sukuyodo"],
   Breakup: ["rider-waite-tarot", "lenormand", "iching", "synastry-astrology"],
   Family: ["bazi", "ziwei", "bone-divination", "chakra-reading"],
   "Life Purpose": ["vedic-astrology", "human-design", "gene-keys", "jaimini-astrology", "soul-contract"],

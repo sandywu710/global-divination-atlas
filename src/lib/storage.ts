@@ -3,10 +3,11 @@
 // 使用者的個人資料（出生日期等）全部存在瀏覽器本機，不會上傳到任何伺服器。
 // 這個網站沒有帳號系統、沒有後端資料庫。
 // ────────────────────────────────────────────────────────────
-import type { UserProfile } from "@/types/divination";
+import type { OtherPersonProfile, UserProfile } from "@/types/divination";
 import type { ReadingResult } from "@/types/randomDraw";
 
 const PROFILE_KEY = "gda:profile";
+const OTHER_PERSON_PROFILE_KEY = "gda:other-person-profile";
 const FAVORITES_KEY = "gda:favorites";
 const PROMPT_HISTORY_KEY = "gda:prompt-history";
 const READING_HISTORY_KEY = "gda:reading-history";
@@ -40,6 +41,27 @@ export function clearProfile(): void {
   if (!isBrowser()) return;
   try {
     window.localStorage.removeItem(PROFILE_KEY);
+  } catch {
+    // 忽略
+  }
+}
+
+// ── 合盤占星這類系統需要的「對方」出生資料，跟自己的 Profile 分開存 ─────
+
+export function loadOtherPersonProfile(): OtherPersonProfile {
+  if (!isBrowser()) return {};
+  try {
+    const raw = window.localStorage.getItem(OTHER_PERSON_PROFILE_KEY);
+    return raw ? (JSON.parse(raw) as OtherPersonProfile) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveOtherPersonProfile(profile: OtherPersonProfile): void {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(OTHER_PERSON_PROFILE_KEY, JSON.stringify(profile));
   } catch {
     // 忽略
   }
@@ -159,6 +181,7 @@ export function clearAllData(): void {
   if (!isBrowser()) return;
   try {
     window.localStorage.removeItem(PROFILE_KEY);
+    window.localStorage.removeItem(OTHER_PERSON_PROFILE_KEY);
     window.localStorage.removeItem(FAVORITES_KEY);
     window.localStorage.removeItem(PROMPT_HISTORY_KEY);
     window.localStorage.removeItem(READING_HISTORY_KEY);
