@@ -480,38 +480,6 @@ export const systems: DivinationSystem[] = [
     promptTemplate:
       "You must explicitly state at the very start of your response that this is a stylized, educational Nadi-astrology-inspired interpretation — NOT a claim to access real palm-leaf manuscripts, ancient records, or any supernatural source of information about the user's past.",
   },
-  {
-    id: "samudrika-shastra",
-    name: "Samudrika Shastra",
-    nativeNames: ["सामुद्रिक शास्त्र"],
-    region: ["India"],
-    culturalOrigin: "印度",
-    category: ["Indian Divination", "Symbolic"],
-    era: "古印度傳統相學經典",
-    description:
-      "印度傳統相學，透過面相、手相、身體特徵的象徵意義來解讀性格傾向與傳統認為的吉相特徵，是印度文化中歷史悠久的身體象徵解讀系統。",
-    whatItCanExplore: ["Personality", "Health Symbolism"],
-    idealQuestions: ["我的面相／手相在傳統上代表什麼樣的性格？", "傳統相學怎麼解讀我的某項特徵？"],
-    requiredInformation: ["photo"],
-    optionalInformation: ["handPhoto"],
-    inputType: ["photo"],
-    timeOrientation: ["timeless"],
-    specificity: "symbolic-reflection",
-    aiSuitability: 2,
-    requiresCalculation: false,
-    requiresRandomization: false,
-    requiresImage: true,
-    spiritualClaimLevel: "traditional",
-    promptLanguage: "English",
-    methodologySummary:
-      "Interpret facial and palm features according to traditional Samudrika Shastra symbolic categories (e.g. specific lines, proportions, marks) as culturally-inherited symbolic associations with personality and traditionally-considered auspiciousness.",
-    limitations:
-      "這是象徵性的傳統文化解讀，不是醫學或科學上對身體特徵的判斷；AI 對照片的判讀能力有限，細節解讀應保守。",
-    relatedSystems: [],
-    promptTemplate:
-      "If no photo is actually provided, do not fabricate a description of facial/palm features — ask for one or explain the framework in general terms instead.",
-  },
-
   // ───────────── 西方系統 ─────────────
   {
     id: "western-astrology",
@@ -1004,36 +972,6 @@ export const systems: DivinationSystem[] = [
       "If simulating the random point generation yourself, clearly label it as an AI-simulated equivalent of physical geomantic point-marking, not an authentic physical casting.",
   },
   {
-    id: "bibliomancy",
-    name: "Bibliomancy",
-    nativeNames: ["書占"],
-    region: ["Europe", "Middle East", "Americas"],
-    culturalOrigin: "跨文化，多個文明皆有類似傳統",
-    category: ["Western Esotericism", "Symbolic"],
-    era: "跨文化、歷史悠久",
-    description:
-      "隨機翻開一本書（傳統上常用聖經、詩集或個人重視的書籍）並隨機指出一段文字，將這段文字視為對當下問題的象徵性回應，是相當古老且跨文化的占卜方式。",
-    whatItCanExplore: ["Inner World", "Spiritual Growth", "Decision"],
-    idealQuestions: ["這段文字對我目前的處境有什麼指引？", "我該用什麼角度看待這個狀況？"],
-    requiredInformation: ["question", "randomSelection"],
-    inputType: ["question", "randomDraw", "textSelection"],
-    timeOrientation: ["present", "timeless"],
-    specificity: "symbolic-reflection",
-    aiSuitability: 3,
-    requiresCalculation: false,
-    requiresRandomization: true,
-    requiresImage: false,
-    spiritualClaimLevel: "symbolic",
-    promptLanguage: "English",
-    methodologySummary:
-      "Two distinct steps: (1) a random passage is selected from a chosen text (by the user physically, or a random selection method); (2) the AI interprets that specific passage symbolically in relation to the question — these two steps must stay clearly separated.",
-    limitations:
-      "解讀高度主觀，仰賴使用者自己選定的文本與段落；這是反思工具而非預測方法，重點在啟發聯想而非給出明確答案。",
-    relatedSystems: [],
-    promptTemplate:
-      "Keep the two steps explicit and separate in your response: first state which passage was selected (or ask the user to provide it), then interpret it — do not skip straight to interpretation without naming the passage.",
-  },
-  {
     id: "scrying",
     name: "Scrying (Crystal / Mirror)",
     nativeNames: ["水晶占卜", "鏡面占卜"],
@@ -1059,39 +997,9 @@ export const systems: DivinationSystem[] = [
       "Take the user's description of the images/impressions they perceived while scrying and interpret them symbolically, using dream-symbolism and archetypal frameworks — as a structured reflection on the user's own subconscious impressions, not as literal supernatural viewing.",
     limitations:
       "重要：AI 無法真的透過水晶球或鏡面「看見」任何畫面，也沒有超自然視覺能力；這個系統的本質是引導使用者描述自己的主觀印象，再協助做象徵性解讀。",
-    relatedSystems: ["tasseography", "dream-divination"],
+    relatedSystems: ["dream-divination"],
     promptTemplate:
       "You must not claim to actually perceive or see anything through scrying. Only interpret the imagery the user themselves describes having perceived, framed clearly as their own subconscious impression.",
-  },
-  {
-    id: "tasseography",
-    name: "Tasseography",
-    nativeNames: ["茶葉占卜"],
-    region: ["Europe", "Middle East"],
-    culturalOrigin: "歐洲與中東民間傳統",
-    category: ["Symbolic", "Western Esotericism"],
-    era: "約 17 世紀歐洲民間發展",
-    description:
-      "觀察喝完茶後杯底殘留茶葉（或咖啡渣）形成的形狀，將形狀對應到象徵意義，來對關係、當下狀況與未來提供象徵性的反思，是相當生活化、民俗風味濃厚的占卜方式。",
-    whatItCanExplore: ["Relationships", "Future Trends", "Inner World"],
-    idealQuestions: ["杯底的形狀可能代表什麼象徵意義？", "這個圖案反映出什麼樣的訊息？"],
-    requiredInformation: ["photo"],
-    inputType: ["photo"],
-    timeOrientation: ["present", "future"],
-    specificity: "symbolic-reflection",
-    aiSuitability: 2,
-    requiresCalculation: false,
-    requiresRandomization: false,
-    requiresImage: true,
-    spiritualClaimLevel: "symbolic",
-    promptLanguage: "English",
-    methodologySummary:
-      "Interpret the shapes described or shown (via photo) in the tea leaf/coffee ground residue using traditional tasseography symbol dictionaries (e.g. a ring shape, a bird shape) as symbolic prompts for reflection.",
-    limitations:
-      "從照片辨識具體形狀的準確度有限，解讀高度主觀；建議把這個系統當作「圖像聯想的反思遊戲」，而非精確的預測工具。",
-    relatedSystems: ["scrying"],
-    promptTemplate:
-      "If no photo/description of the actual shapes is provided, do not invent shapes — ask the user to describe what they see instead.",
   },
 
   // ───────────── 數字學 ─────────────
