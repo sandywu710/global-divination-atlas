@@ -200,7 +200,7 @@ export const systems: DivinationSystem[] = [
       "被稱為中國三大秘術之一，以特定時間排出九宮盤局，結合天干、八門、九星、八神來分析策略、時機與方位，常用於商業決策、談判時機與行動策略規劃。",
     whatItCanExplore: ["Decision", "Timing", "Career", "Money", "Relationships"],
     idealQuestions: ["這個時間點適合開始這個計畫嗎？", "這場談判我該用什麼策略？", "往哪個方向發展比較有利？"],
-    requiredInformation: ["question", "specificEvent"],
+    requiredInformation: ["question", "specificEvent", "castMoment"],
     optionalInformation: ["currentLocation"],
     inputType: ["question", "birthData"],
     timeOrientation: ["present", "future"],
@@ -217,7 +217,7 @@ export const systems: DivinationSystem[] = [
       "排盤規則非常複雜，人工心算或 AI 直接排盤誤差風險高；建議先用專門排盤工具算出正確盤局，再交給 AI 做文字解讀，而非請 AI 自行起局。",
     relatedSystems: ["daliuren", "liuyao"],
     promptTemplate:
-      "State plainly that precise chart construction should ideally come from dedicated calculation tools, and that your interpretation assumes the chart data given is accurate.",
+      "State plainly that precise chart construction should ideally come from dedicated calculation tools, and that your interpretation assumes the chart data given is accurate. Use the 'Moment this question was asked' timestamp given below (auto-captured by the application, not entered by the user) as the exact moment to construct the chart for — do not ask the user for a different time.",
   },
   {
     id: "daliuren",
@@ -566,7 +566,7 @@ export const systems: DivinationSystem[] = [
       "不看出生盤，而是以「提問當下的時間與地點」起盤，針對一個具體、明確的問題（例如「這件事會不會成功？」）給出判斷，是占星學中最直接回應具體問題的分支。",
     whatItCanExplore: ["Specific Event", "Decision"],
     idealQuestions: ["我弄丟的東西找得回來嗎？", "這次面試結果會如何？", "我現在該不該答應這個邀約？"],
-    requiredInformation: ["question", "specificEvent"],
+    requiredInformation: ["question", "specificEvent", "castMoment"],
     inputType: ["question"],
     timeOrientation: ["present", "future"],
     specificity: "single-event",
@@ -582,7 +582,7 @@ export const systems: DivinationSystem[] = [
       "需要提問當下「精確」的時間與地點；一個問題只能問一次，重複起卦會降低判讀的可靠性（依古典規則）。",
     relatedSystems: ["hellenistic-astrology", "kp-astrology"],
     promptTemplate:
-      "Ask for the exact time and location the question was formulated, since horary charts are cast for that moment — not the user's birth data.",
+      "Use the 'Moment this question was asked' timestamp given below (auto-captured by the application, not entered by the user) as the exact moment to cast the horary chart for — do not ask the user for a different time. Location was not collected for this reading; if location materially affects the chart, state that assumption explicitly rather than guessing a location.",
   },
   {
     id: "electional-astrology",
@@ -596,7 +596,7 @@ export const systems: DivinationSystem[] = [
       "用來挑選「開始做某件事」的最佳時機，例如創業、發表產品、搬家、簽約、結婚等，透過分析候選時間點的星象組合，找出對這件事最有利的時間窗口。",
     whatItCanExplore: ["Timing", "Decision", "Career", "Money"],
     idealQuestions: ["我該選哪一天開幕比較好？", "這幾個候選日期哪一個對簽約比較有利？", "什麼時候是搬家的好時機？"],
-    requiredInformation: ["question", "specificEvent"],
+    requiredInformation: ["question", "specificEvent", "candidateMoments"],
     optionalInformation: ["currentLocation"],
     inputType: ["question"],
     timeOrientation: ["future"],
@@ -613,7 +613,7 @@ export const systems: DivinationSystem[] = [
       "需要使用者提供具體的候選時間範圍與地點；擇日占星是「趨吉避凶的參考」，不是保證成功的方法。",
     relatedSystems: ["horary-astrology", "western-astrology"],
     promptTemplate:
-      "If specific candidate dates/times are not given, ask for a range rather than inventing arbitrary dates to evaluate.",
+      "The candidate date/time options listed below were entered by the user through the application — evaluate exactly those options rather than inventing additional dates to compare.",
   },
   {
     id: "synastry-astrology",

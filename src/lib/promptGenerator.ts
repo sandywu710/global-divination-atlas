@@ -6,7 +6,7 @@
 // 這裡只負責「怎麼組合」的邏輯。
 // ────────────────────────────────────────────────────────────
 import { drawResultRules, modeInstructions, responseLanguageInstruction, responseStructure, spiritualClaimWarning, universalRules } from "@/data/promptTemplate";
-import type { DivinationSystem, PromptMode, UserProfile } from "@/types/divination";
+import type { DivinationSystem, OtherPersonProfile, PromptMode, UserProfile } from "@/types/divination";
 import type { ReadingResult } from "@/types/randomDraw";
 
 export interface PromptBuildInput {
@@ -18,10 +18,29 @@ export interface PromptBuildInput {
   drawResult?: ReadingResult;
   /** 系統的 requiredInformation 包含 dreamDescription 時（例如夢境占卜），使用者實際輸入的夢境內容 */
   dreamDescription?: string;
+  /** 系統的 requiredInformation 包含 context 或 specificEvent 時（例如梅花易數、奇門遁甲），
+   *  使用者具體描述的事件來龍去脈 */
+  eventDescription?: string;
+  /** 系統的 requiredInformation 包含 castMoment 時（例如奇門遁甲、卜卦占星），使用者按下
+   *  「產生 Prompt」當下的系統時間（ISO 字串），由元件自動帶入，不需要使用者自己輸入 */
+  castMoment?: string;
+  /** 系統的 requiredInformation 包含 candidateMoments 時（擇日占星），使用者輸入的候選時段清單 */
+  candidateMoments?: string[];
+  /** 系統的 requiredInformation 包含 otherPersonBirthData 時（合盤占星），另一個人的出生資料 */
+  otherPersonProfile?: OtherPersonProfile;
+}
+
+interface UserInfoBlockExtras {
+  dreamDescription?: string;
+  eventDescription?: string;
+  castMoment?: string;
+  candidateMoments?: string[];
+  otherPersonProfile?: OtherPersonProfile;
 }
 
 /** 依照系統需要的資料欄位，組出「使用者資訊」區塊；沒填的欄位標示為 [Not provided] */
-function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem, dreamDescription?: string): string {
+function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem, extras: UserInfoBlockExtras = {}): string {
+  const { dreamDescription, eventDescription, castMoment, candidateMoments, otherPersonProfile } = extras;
   const lines: string[] = [];
   const need = new Set([...system.requiredInformation, ...(system.optionalInformation ?? [])]);
 
@@ -36,10 +55,30 @@ function buildUserInfoBlock(profile: UserProfile, system: DivinationSystem, drea
   if (need.has("name") || need.has("fullName"))
     lines.push(`Name: ${profile.name || "[Not provided]"}`);
 
+  if (need.has("otherPersonBirthData") || need.has("partnerBirthData")) {
+    lines.push(`Other person — Birth date: ${otherPersonProfile?.birthDate || "[Not provided]"}`);
+    lines.push(`Other person — Birth time: ${otherPersonProfile?.birthTime || "[Not provided]"}`);
+    lines.push(`Other person — Birth place: ${otherPersonProfile?.birthPlace || "[Not provided]"}`);
+  }
+
   if (need.has("photo") || need.has("handPhoto"))
     lines.push("Photo: [User will attach a photo separately, if applicable]");
   if (need.has("dreamDescription"))
     lines.push(`Dream description: ${dreamDescription?.trim() ? dreamDescription.trim() : "[Not provided]"}`);
+  if (need.has("context") || need.has("specificEvent"))
+    lines.push(`Specific event / context: ${eventDescription?.trim() ? eventDescription.trim() : "[Not provided]"}`);
+  if (need.has("castMoment"))
+    lines.push(
+      `Moment this question was asked (local system time, auto-captured by the application when the user generated this prompt — not entered manually): ${castMoment || "[Not captured]"}`
+    );
+  if (need.has("candidateMoments")) {
+    const trimmed = (candidateMoments ?? []).map((m) => m.trim()).filter(Boolean);
+    lines.push(
+      trimmed.length > 0
+        ? `Candidate date/time options to compare (choose the most favorable one):\n${trimmed.map((m, i) => `  ${i + 1}. ${m}`).join("\n")}`
+        : "Candidate date/time options to compare: [Not provided]"
+    );
+  }
   // requiresRandomDraw 的系統，抽牌結果一律走下面 buildDrawResultsBlock() 那個獨立區塊，
   // 不會、也不應該叫外部 AI「自己模擬抽牌」——這裡刻意跳過舊版的模擬提示文字。
   if (!system.requiresRandomDraw && (need.has("randomSelection") || need.has("cards") || need.has("dice")))
@@ -166,8 +205,25 @@ function buildDrawResultsBlock(reading: ReadingResult, system: DivinationSystem)
 }
 
 /** 產生單一系統的完整 Prompt */
-export function buildPrompt({ system, question, profile, mode, drawResult, dreamDescription }: PromptBuildInput): string {
-  const userInfoBlock = buildUserInfoBlock(profile, system, dreamDescription);
+export function buildPrompt({
+  system,
+  question,
+  profile,
+  mode,
+  drawResult,
+  dreamDescription,
+  eventDescription,
+  castMoment,
+  candidateMoments,
+  otherPersonProfile,
+}: PromptBuildInput): string {
+  const userInfoBlock = buildUserInfoBlock(profile, system, {
+    dreamDescription,
+    eventDescription,
+    castMoment,
+    candidateMoments,
+    otherPersonProfile,
+  });
   const rules = [...universalRules, spiritualClaimWarning[system.spiritualClaimLevel], system.promptTemplate]
     .filter(Boolean)
     .map((r) => `- ${r}`)
@@ -204,13 +260,24 @@ Stay faithful to the traditional framework of ${system.name} throughout your res
 ${responseLanguageInstruction}`;
 }
 
+/** buildComparisonPrompt 除了 systems/question/profile 之外，其餘欄位都是可有可無的附加資料，
+ *  隨著支援的系統種類變多（夢境描述、具體事件、起局時間、候選時段、對方出生資料……），
+ *  改用一個物件裝起來，比一長串位置參數好維護、之後要再加欄位也不用改呼叫端的參數順序。 */
+export interface ComparisonPromptExtras {
+  drawResults?: Record<string, ReadingResult>;
+  dreamDescription?: string;
+  eventDescription?: string;
+  castMoment?: string;
+  candidateMoments?: string[];
+  otherPersonProfile?: OtherPersonProfile;
+}
+
 /** 多系統比較用的 Prompt（Nice to Have 功能） */
 export function buildComparisonPrompt(
   systems: DivinationSystem[],
   question: string,
   profile: UserProfile,
-  drawResults?: Record<string, ReadingResult>,
-  dreamDescription?: string
+  extras: ComparisonPromptExtras = {}
 ): string {
   const sections = systems
     .map((system, i) => {
@@ -219,8 +286,12 @@ export function buildComparisonPrompt(
         question,
         profile,
         mode: "Standard",
-        drawResult: drawResults?.[system.id],
-        dreamDescription,
+        drawResult: extras.drawResults?.[system.id],
+        dreamDescription: extras.dreamDescription,
+        eventDescription: extras.eventDescription,
+        castMoment: extras.castMoment,
+        candidateMoments: extras.candidateMoments,
+        otherPersonProfile: extras.otherPersonProfile,
       });
       return `--- SYSTEM ${i + 1}: ${system.name} ---\n${body}`;
     })

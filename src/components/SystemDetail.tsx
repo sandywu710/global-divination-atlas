@@ -50,6 +50,8 @@ const infoLabels: Record<string, string> = {
   specificEvent: "具體事件",
   name: "姓名",
   fullName: "全名",
+  castMoment: "提問當下的精確時間（自動帶入）",
+  candidateMoments: "候選時段清單",
 };
 
 const claimLabels: Record<DivinationSystem["spiritualClaimLevel"], string> = {
