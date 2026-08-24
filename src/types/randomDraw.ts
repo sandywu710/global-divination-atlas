@@ -86,6 +86,10 @@ export interface DrawResult {
   reversed?: boolean; // 只有支援正逆位的牌組才有意義
   /** 只有 I Ching 用：這一爻是否為變爻（老陰／老陽） */
   changing?: boolean;
+  /** 只有六爻用：這一爻的天干地支（納甲），例如 "Jia-Zi (甲子)" */
+  stemBranch?: string;
+  /** 只有六爻用：這一爻的六親標註，例如 "Parents (父母)" */
+  sixRelative?: string;
 }
 
 /** 一次完整的抽牌／起卦結果，會被存進 Reading History，也會被送進 Prompt Generator */
@@ -104,4 +108,6 @@ export interface ReadingResult {
   resultingHexagramName?: string;
   /** 變爻的爻位（0-based，由下往上），沒有變爻時是空陣列 */
   changingLineIndices?: number[];
+  /** 只有六爻用：這一卦所屬的京房八宮，例如 "Kan Palace (坎宮, Water)" */
+  palaceName?: string;
 }

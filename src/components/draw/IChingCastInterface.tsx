@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { resolveHexagram, tossLine, toReadingResult, type HexagramLine } from "@/lib/randomDraw/ichingEngine";
+import {
+  resolveHexagram,
+  tossLine,
+  toReadingResult as defaultBuildReading,
+  type HexagramCastResult,
+  type HexagramLine,
+} from "@/lib/randomDraw/ichingEngine";
 import { addReadingHistoryEntry } from "@/lib/storage";
 import type { DivinationSystem } from "@/types/divination";
 import type { CoinTossHexagramConfig, ReadingResult } from "@/types/randomDraw";
@@ -13,6 +19,10 @@ interface IChingCastInterfaceProps {
   question: string;
   onComplete: (result: ReadingResult) => void;
   onReset?: () => void;
+  /** 選填：把起卦結果（HexagramCastResult）轉成 ReadingResult 的函式，預設用 I Ching
+   *  標準轉換（toReadingResult）。六爻共用這個起卦介面時，會傳入 liuyaoEngine 的版本，
+   *  多附加天干地支／六親標註——沒有傳這個 prop 時（例如 I Ching 本身），行為完全不變。 */
+  buildReading?: (cast: HexagramCastResult) => ReadingResult;
 }
 
 type Stage = "select" | "casting" | "done";
@@ -21,7 +31,15 @@ const lineLabels = ["Line 1 (bottom)", "Line 2", "Line 3", "Line 4", "Line 5", "
 
 // I Ching 專用的起卦畫面：三枚銅板法，由下往上擲 6 次。跟 DrawInterface（卡牌類）
 // 是完全獨立的元件，因為機制本質不同——這裡沒有「牌陣」，每一爻是獨立、依序擲出的。
-export default function IChingCastInterface({ system, question, onComplete, onReset }: IChingCastInterfaceProps) {
+// 六爻的起卦方式跟 I Ching 完全相同（一樣的銅板法），所以直接共用這個元件，
+// 只透過 buildReading prop 換掉「起卦結果要多附加什麼標註」這一步。
+export default function IChingCastInterface({
+  system,
+  question,
+  onComplete,
+  onReset,
+  buildReading = defaultBuildReading,
+}: IChingCastInterfaceProps) {
   const config = (system.randomDraw?.randomizationMethod === "coin-toss-hexagram"
     ? system.randomDraw
     : undefined) as CoinTossHexagramConfig | undefined;
@@ -57,7 +75,7 @@ export default function IChingCastInterface({ system, question, onComplete, onRe
 
       if (next.every((l) => l !== null)) {
         const resolved = resolveHexagram(next as HexagramLine[]);
-        const reading = toReadingResult(resolved);
+        const reading = buildReading(resolved);
         setFinalReading(reading);
         addReadingHistoryEntry({ question, systemId: system.id, reading });
         onComplete(reading);

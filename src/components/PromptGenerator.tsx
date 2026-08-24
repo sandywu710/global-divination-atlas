@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import DrawInterface from "@/components/draw/DrawInterface";
 import IChingCastInterface from "@/components/draw/IChingCastInterface";
+import { toLiuYaoReadingResult } from "@/lib/randomDraw/liuyaoEngine";
 import { buildComparisonPrompt, buildPrompt } from "@/lib/promptGenerator";
 import { addPromptHistory, loadProfile, saveProfile } from "@/lib/storage";
 import type { DivinationSystem, PromptMode, UserProfile } from "@/types/divination";
@@ -28,6 +29,7 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
   // 用 lazy initializer 而不是 useEffect：profile 只存在瀏覽器裡，
   // 這樣掛載當下就能拿到正確的值，畫面不會先閃一次空白再補上。
   const [question, setQuestion] = useState(initialQuestion);
+  const [dreamDescription, setDreamDescription] = useState("");
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
   const [mode, setMode] = useState<PromptMode>("Standard");
   const [prompt, setPrompt] = useState<string | null>(null);
@@ -41,9 +43,14 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
     return set;
   }, [systems]);
 
-  // Tarot / Lenormand / Runes / I Ching 這類系統：要先在網站上真正抽完牌，才能繼續填資料、產生 Prompt
+  // Tarot / Lenormand / Runes / I Ching / 六爻 這類系統：要先在網站上真正抽完牌，才能繼續填資料、產生 Prompt
   const drawRequiredSystems = useMemo(() => systems.filter((s) => s.requiresRandomDraw), [systems]);
   const allDrawsComplete = drawRequiredSystems.every((s) => drawResults[s.id]);
+
+  // 夢境占卜這類系統：requiredInformation 裡有 dreamDescription，代表這是必填資料，
+  // 沒填就不能產生 Prompt（不然又會變回「有欄位但沒人填」的半成品狀態）
+  const dreamDescriptionRequired = neededFields.has("dreamDescription");
+  const dreamDescriptionMissing = dreamDescriptionRequired && !dreamDescription.trim();
 
   function updateProfile(patch: Partial<UserProfile>) {
     const next = { ...profile, ...patch };
@@ -66,11 +73,18 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
   }
 
   function handleGenerate() {
-    if (systems.length === 0 || !allDrawsComplete) return;
+    if (systems.length === 0 || !allDrawsComplete || dreamDescriptionMissing) return;
     const result =
       systems.length === 1
-        ? buildPrompt({ system: systems[0], question, profile, mode, drawResult: drawResults[systems[0].id] })
-        : buildComparisonPrompt(systems, question, profile, drawResults);
+        ? buildPrompt({
+            system: systems[0],
+            question,
+            profile,
+            mode,
+            drawResult: drawResults[systems[0].id],
+            dreamDescription,
+          })
+        : buildComparisonPrompt(systems, question, profile, drawResults, dreamDescription);
     setPrompt(result);
     addPromptHistory({ systemIds: systems.map((s) => s.id), question, prompt: result });
   }
@@ -85,6 +99,7 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
             question={question}
             onComplete={(result) => handleDrawComplete(s.id, result)}
             onReset={() => handleDrawReset(s.id)}
+            buildReading={s.id === "liuyao" ? toLiuYaoReadingResult : undefined}
           />
         ) : (
           <DrawInterface
@@ -115,6 +130,22 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
           className="w-full rounded-2xl border hairline bg-paper px-4 py-3 text-[15px] text-charcoal placeholder:text-charcoal-soft/60 focus:border-charcoal focus:outline-none"
         />
       </div>
+
+      {dreamDescriptionRequired && (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-charcoal">請描述你的夢境</label>
+          <textarea
+            value={dreamDescription}
+            onChange={(e) => setDreamDescription(e.target.value)}
+            rows={5}
+            placeholder="請盡量描述細節：夢裡出現了誰／什麼場景／發生了什麼事／醒來時的感覺，這段文字會完整放進 Prompt 裡"
+            className="w-full rounded-2xl border hairline bg-paper px-4 py-3 text-[15px] text-charcoal placeholder:text-charcoal-soft/60 focus:border-charcoal focus:outline-none"
+          />
+          {dreamDescriptionMissing && (
+            <p className="mt-1.5 text-xs text-accent-red">這個系統需要先描述夢境內容，才能產生 Prompt。</p>
+          )}
+        </div>
+      )}
 
       <div className="rounded-2xl border hairline bg-paper p-5">
         <div className="mb-4 flex items-center justify-between">
@@ -219,7 +250,7 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
       <button
         type="button"
         onClick={handleGenerate}
-        disabled={systems.length === 0 || !allDrawsComplete}
+        disabled={systems.length === 0 || !allDrawsComplete || dreamDescriptionMissing}
         className="tap-target w-full rounded-full bg-mist-gold px-6 py-3.5 text-[15px] font-medium text-ivory transition-opacity hover:opacity-90 disabled:opacity-40 sm:w-auto"
       >
         產生 Prompt

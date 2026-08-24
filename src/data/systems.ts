@@ -143,7 +143,16 @@ export const systems: DivinationSystem[] = [
       "六爻對起卦時間與方法要求嚴謹，且判斷邏輯相當技術性；用於單一具體問題效果最好，不適合用來看整體人生格局。",
     relatedSystems: ["iching", "meihua", "qimen"],
     promptTemplate:
-      "Identify the 用神 (Useful God) relevant to the specific question before attempting any judgment about the outcome.",
+      "Identify the 用神 (Useful God) relevant to the specific question before attempting any judgment about the outcome — the Six Relative labels already assigned to each line below tell you which lines are candidates.",
+    // ── Random Draw 設定：跟易經共用同一套三枚銅板起卦引擎（headsValue/tailsValue 相同），
+    // 只有起卦完成後「多附加天干地支／六親標註」這一層是六爻獨有的（見 liuyaoEngine.ts） ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "coin-toss-hexagram",
+      headsValue: 3,
+      tailsValue: 2,
+    },
   },
   {
     id: "meihua",
