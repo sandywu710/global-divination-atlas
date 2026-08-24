@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import DrawInterface from "@/components/draw/DrawInterface";
 import IChingCastInterface from "@/components/draw/IChingCastInterface";
+import TossInterface from "@/components/draw/TossInterface";
 import { toLiuYaoReadingResult } from "@/lib/randomDraw/liuyaoEngine";
 import { buildComparisonPrompt, buildPrompt } from "@/lib/promptGenerator";
 import { addPromptHistory, loadProfile, saveProfile } from "@/lib/storage";
@@ -91,17 +92,32 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
 
   return (
     <div className="space-y-6">
-      {drawRequiredSystems.map((s) =>
-        s.randomDraw?.randomizationMethod === "coin-toss-hexagram" ? (
-          <IChingCastInterface
-            key={s.id}
-            system={s}
-            question={question}
-            onComplete={(result) => handleDrawComplete(s.id, result)}
-            onReset={() => handleDrawReset(s.id)}
-            buildReading={s.id === "liuyao" ? toLiuYaoReadingResult : undefined}
-          />
-        ) : (
+      {drawRequiredSystems.map((s) => {
+        const method = s.randomDraw?.randomizationMethod;
+        if (method === "coin-toss-hexagram") {
+          return (
+            <IChingCastInterface
+              key={s.id}
+              system={s}
+              question={question}
+              onComplete={(result) => handleDrawComplete(s.id, result)}
+              onReset={() => handleDrawReset(s.id)}
+              buildReading={s.id === "liuyao" ? toLiuYaoReadingResult : undefined}
+            />
+          );
+        }
+        if (method === "object-toss") {
+          return (
+            <TossInterface
+              key={s.id}
+              system={s}
+              question={question}
+              onComplete={(result) => handleDrawComplete(s.id, result)}
+              onReset={() => handleDrawReset(s.id)}
+            />
+          );
+        }
+        return (
           <DrawInterface
             key={s.id}
             system={s}
@@ -109,8 +125,8 @@ export default function PromptGenerator({ systems, initialQuestion = "" }: Promp
             onComplete={(result) => handleDrawComplete(s.id, result)}
             onReset={() => handleDrawReset(s.id)}
           />
-        )
-      )}
+        );
+      })}
 
       {!allDrawsComplete && drawRequiredSystems.length > 0 && (
         <p className="rounded-2xl border hairline bg-ivory-soft p-5 text-sm text-charcoal-soft">

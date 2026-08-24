@@ -13,14 +13,21 @@ export type InputMode =
   | "image" // Type C：Palmistry, Face Reading, Tasseography...
   | "text"; // Type D：Dream Divination, Bibliomancy...
 
-/** 卡牌類（Tarot/Lenormand/Runes/Oracle/Cartomancy）共用同一套洗牌＋抽取策略 */
-export type RandomizationMethod =
+/** 卡牌類（Tarot/Lenormand/Runes/Oracle/Cartomancy）共用同一套洗牌＋抽取策略，
+ *  刻意只列這 5 種、不包含 coin-toss-hexagram／object-toss，讓 RandomDrawConfig
+ *  跟 CoinTossHexagramConfig／ObjectTossConfig 三者的 randomizationMethod 完全不重疊，
+ *  TypeScript 才能在元件裡用 `randomizationMethod === "..."` 正確做型別窄化。 */
+export type CardRandomizationMethod =
   | "tarot-card-draw"
   | "lenormand-card-draw"
   | "rune-draw"
   | "oracle-card-draw"
-  | "cartomancy-draw"
-  | "coin-toss-hexagram" // I Ching 專用（Phase 4），跟卡牌抽取邏輯完全不同
+  | "cartomancy-draw";
+
+export type RandomizationMethod =
+  | CardRandomizationMethod
+  | "coin-toss-hexagram" // I Ching／六爻專用，跟卡牌抽取邏輯完全不同
+  | "object-toss" // Ifá／貝殼占卜／骨占共用：拋擲一組物件，記錄每一個正反面
   | "geomantic-generation"; // 未來 Geomancy 用，這次不實作，先保留型別
 
 export interface SpreadDefinition {
@@ -53,7 +60,7 @@ export interface DeckDefinition {
 }
 
 export interface RandomDrawConfig {
-  randomizationMethod: RandomizationMethod;
+  randomizationMethod: CardRandomizationMethod;
   deckId: string; // 對應 DeckDefinition.id
   drawCounts: number[]; // 這個系統支援的抽牌張數，例如 [1, 3]
   spreads: SpreadDefinition[]; // 每種抽牌張數對應的牌陣位置
@@ -74,8 +81,26 @@ export interface CoinTossHexagramConfig {
   tailsValue: number;
 }
 
-/** DivinationSystem.randomDraw 可能是卡牌類設定，也可能是 I Ching 的銅板法設定 */
-export type AnyRandomDrawConfig = RandomDrawConfig | CoinTossHexagramConfig;
+/**
+ * 拋擲類專用設定：Ifá／貝殼占卜／骨占共用。傳統做法都是「拋一組物件，
+ * 記錄每一個是正面（marked）還是反面（unmarked）朝上」，邏輯上跟 I Ching 的
+ * 三枚銅板法很接近（都是獨立擲、各自記正反面），但沒有「爻」「卦」這種
+ * 疊加成更高層結構的概念，所以型別上刻意跟 CoinTossHexagramConfig 分開。
+ */
+export interface ObjectTossConfig {
+  randomizationMethod: "object-toss";
+  /** 這次要拋幾個物件，例如貝殼占卜傳統上常見的 16 枚 */
+  objectCount: number;
+  /** 物件本身的稱呼，例如 "cowrie shell"，用在畫面與 Prompt 的每一個位置標籤 */
+  objectLabel: string;
+  /** 正面（marked）朝上時要顯示的文字，例如 "Mouth-up (aperture visible)" */
+  markedFaceLabel: string;
+  /** 反面（unmarked）朝上時要顯示的文字，例如 "Mouth-down (back visible)" */
+  unmarkedFaceLabel: string;
+}
+
+/** DivinationSystem.randomDraw 可能是卡牌類設定、I Ching 的銅板法設定，或拋擲類設定 */
+export type AnyRandomDrawConfig = RandomDrawConfig | CoinTossHexagramConfig | ObjectTossConfig;
 
 /** 單一張牌／符文的抽取結果；I Ching 則用它來表示「單一爻」的起卦結果 */
 export interface DrawResult {

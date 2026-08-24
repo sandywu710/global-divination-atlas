@@ -118,13 +118,31 @@ ${rules}
 - Useful God (用神): based on what the question below is actually about, decide which Six Relative category above is the Useful God for this specific question (e.g. money/spouse-related questions map to Spouse/Wealth 妻財, career/legal/authority matters to Officials/Spirits 官鬼, documents/elders/mother to Parents 父母, children/health/resolution to Offspring 子孫, siblings/peers/competitors to Siblings 兄弟) before making any judgment about the outcome.`;
 }
 
-/** 把使用者在網站上實際抽到／起卦的結果，組成 AI 只能解讀、不能重新抽／重新起卦的區塊。
- *  卡牌類、I Ching、六爻的資料形狀不完全相同，所以格式邏輯分開處理，
+/** 拋擲類（Ifá／貝殼占卜／骨占）格式：列出每個物件是正面還是反面朝上，
+ *  外加一個總計比例方便 AI 快速掌握整體格局，防呆規則跟其他 Random Draw 系統共用。 */
+function buildTossResultsBlock(reading: ReadingResult): string {
+  const resultLines = reading.results.map((r, i) => `${i + 1}. ${r.positionLabel} — ${r.itemName}`).join("\n");
+  const markedCount = reading.results.filter((r) => r.itemId === "marked").length;
+  const rules = drawResultRules.map((r) => `- ${r}`).join("\n");
+
+  return `METHOD: Object Toss${reading.deckName ? ` (${reading.deckName})` : ""}
+
+ACTUAL TOSS RESULT (these objects were tossed by the user through the application's own random mechanism — it is not hypothetical):
+${resultLines}
+Summary: ${markedCount} of ${reading.results.length} objects landed marked-side-up.
+
+IMPORTANT — READ CAREFULLY:
+${rules}`;
+}
+
+/** 把使用者在網站上實際抽到／起卦／拋擲的結果，組成 AI 只能解讀、不能重新抽的區塊。
+ *  卡牌類、I Ching、六爻、拋擲類的資料形狀不完全相同，所以格式邏輯分開處理，
  *  但規則（IMPORTANT — READ CAREFULLY）共用。六爻雖然跟 I Ching 共用同一套起卦引擎
  *  （method 都是 "coin-toss-hexagram"），但要多印出天干地支／六親，所以用 system.id 分流，
  *  不影響易經本身固定走 buildHexagramResultsBlock()。 */
 function buildDrawResultsBlock(reading: ReadingResult, system: DivinationSystem): string {
   if (system.id === "liuyao") return buildLiuYaoResultsBlock(reading);
+  if (reading.method === "object-toss") return buildTossResultsBlock(reading);
   return reading.method === "coin-toss-hexagram" ? buildHexagramResultsBlock(reading) : buildCardResultsBlock(reading);
 }
 

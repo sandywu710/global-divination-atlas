@@ -1214,6 +1214,16 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["cowrie-shell"],
     promptTemplate:
       "You must explicitly state that you are not a consecrated Babalawo and cannot perform an authentic Ifá consultation or communicate with Orisha. Offer only an educational, literature-based conceptual reflection, and recommend consulting an actual Ifá priest for genuine practice.",
+    // ── Random Draw 設定：拋擲類共用引擎，這裡用 8 片（呼應傳統 Opele 占卜鏈的 8 片結構） ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "object-toss",
+      objectCount: 8,
+      objectLabel: "Opele chain piece",
+      markedFaceLabel: "Concave face up (marked)",
+      unmarkedFaceLabel: "Convex face up (unmarked)",
+    },
   },
   {
     id: "cowrie-shell",
@@ -1244,6 +1254,16 @@ export const systems: DivinationSystem[] = [
     relatedSystems: ["ifa", "bone-divination"],
     promptTemplate:
       "Note that specific cowrie divination rules vary between West African traditions/ethnic groups, and that this is a general, non-ritual educational interpretation.",
+    // ── Random Draw 設定：拋擲類共用引擎，16 枚呼應「Merindinlogun（十六貝殼）」傳統 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "object-toss",
+      objectCount: 16,
+      objectLabel: "cowrie shell",
+      markedFaceLabel: "Mouth-up (aperture visible)",
+      unmarkedFaceLabel: "Mouth-down (back visible)",
+    },
   },
   {
     id: "african-geomancy",
@@ -1303,7 +1323,18 @@ export const systems: DivinationSystem[] = [
       "傳統上這通常由具備特定身份與訓練的占卜師（如 Sangoma）執行，AI 提供的只能是概括性的教育介紹，不能取代真正的傳統儀式諮詢。",
     relatedSystems: ["cowrie-shell"],
     promptTemplate:
-      "Clarify that authentic bone divination is traditionally performed by trained practitioners (e.g. Sangoma) within a specific cultural/spiritual context, and this is only a general educational reflection.",
+      "Clarify that authentic bone divination is traditionally performed by trained practitioners (e.g. Sangoma) within a specific cultural/spiritual context, and this is only a general educational reflection. The objects listed below were already tossed by the user through the application's own random mechanism — do not treat this as a substitute for a real practitioner's spatial reading of a physical throw.",
+    // ── Random Draw 設定：拋擲類共用引擎。真實骨占的物件組成因占卜師而異，
+    // 這裡用 6 個具代表性的物件數量做「簡化的數位版本」，Prompt 裡會誠實標明這一點 ──
+    inputMode: ["randomDraw"],
+    requiresRandomDraw: true,
+    randomDraw: {
+      randomizationMethod: "object-toss",
+      objectCount: 6,
+      objectLabel: "bone/shell piece",
+      markedFaceLabel: "Marked face up",
+      unmarkedFaceLabel: "Unmarked face up",
+    },
   },
 
   // ───────────── 現代靈性系統 ─────────────
